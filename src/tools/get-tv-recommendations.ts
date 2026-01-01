@@ -46,7 +46,6 @@ export const registerGetTvRecommendationsTool = (
         let tvId: number | undefined = tmdbId;
         let sourceShowTitle: string | undefined;
 
-        // Find TV series ID if only title provided
         if (!tvId && title) {
           const searchResult = await tmdbClient.searchTv(title);
           const firstResult = searchResult.results[0];
@@ -67,7 +66,6 @@ export const registerGetTvRecommendationsTool = (
           );
         }
 
-        // Get source show title if we don't have it
         if (!sourceShowTitle) {
           const tvDetails = await tmdbClient.getTvDetails(tvId);
           sourceShowTitle = tvDetails.name;

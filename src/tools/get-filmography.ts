@@ -35,13 +35,11 @@ export const registerGetFilmographyTool = (
     },
     async ({ personId, role = "all", sortBy = "date", limit = 50 }) => {
       try {
-        // Get person details and credits in parallel
         const [personDetails, movieCredits] = await Promise.all([
           tmdbClient.getPersonDetails(personId),
           tmdbClient.getPersonMovieCredits(personId),
         ]);
 
-        // Filter credits based on role
         let filteredCredits: Array<TmdbMovieCredit & { creditType: "cast" | "crew" }> = [];
 
         if (role === "all" || role === "actor") {
@@ -96,7 +94,6 @@ export const registerGetFilmographyTool = (
           );
         }
 
-        // Remove duplicates (same movie can appear multiple times with different roles)
         const uniqueCreditsMap = new Map<
           number,
           TmdbMovieCredit & { creditType: "cast" | "crew"; roles: string[] }
@@ -123,13 +120,12 @@ export const registerGetFilmographyTool = (
 
         let sortedCredits = Array.from(uniqueCreditsMap.values());
 
-        // Sort credits
         switch (sortBy) {
           case "date":
             sortedCredits.sort((a, b) => {
               const dateA = a.release_date || "0000";
               const dateB = b.release_date || "0000";
-              return dateB.localeCompare(dateA); // Newest first
+              return dateB.localeCompare(dateA);
             });
             break;
           case "rating":
@@ -140,10 +136,8 @@ export const registerGetFilmographyTool = (
             break;
         }
 
-        // Apply limit
         sortedCredits = sortedCredits.slice(0, limit);
 
-        // Format output
         const formattedCredits = sortedCredits.map((credit) => ({
           tmdbId: credit.id,
           title: credit.title,

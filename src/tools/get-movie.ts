@@ -58,14 +58,12 @@ export const registerGetMovieTool = (
         let finalImdbId: string | undefined = imdbId;
         let finalTmdbId: number | undefined = tmdbId;
 
-        // If we have TMDB ID but not IMDB ID, get IMDB ID from TMDB
         if (tmdbId && !imdbId) {
           const tmdbDetails = await tmdbClient.getMovieDetails(tmdbId);
           finalImdbId = tmdbDetails.imdb_id || undefined;
           finalTmdbId = tmdbDetails.id;
         }
 
-        // If we have title but no IDs, search TMDB first (better search)
         if (!finalImdbId && !finalTmdbId && title) {
           const searchResult = await tmdbClient.searchMovies(title, {
             year: year ? parseInt(year) : undefined,
@@ -78,7 +76,6 @@ export const registerGetMovieTool = (
           }
         }
 
-        // Get OMDB data (primary source for ratings, box office, awards)
         let omdbResult;
         if (finalImdbId) {
           omdbResult = await omdbClient.getById({ imdbId: finalImdbId, plot });
@@ -103,7 +100,6 @@ export const registerGetMovieTool = (
           );
         }
 
-        // Get TMDB data for additional info
         let tmdbDetails;
         let tmdbCredits;
 
@@ -113,16 +109,14 @@ export const registerGetMovieTool = (
             includeCredits ? tmdbClient.getMovieCredits(finalTmdbId) : null,
           ]);
         } else if (finalImdbId) {
-          // Try to find TMDB ID from IMDB ID
           tmdbDetails = await tmdbClient.getMovieByImdbId(finalImdbId);
           if (tmdbDetails && includeCredits) {
             tmdbCredits = await tmdbClient.getMovieCredits(tmdbDetails.id);
           }
         }
 
-        // Build enriched output
         const output: Record<string, unknown> = {
-          // Basic info (from OMDB)
+          // Basic info (OMDB)
           title: omdbResult.Title,
           year: omdbResult.Year,
           rated: omdbResult.Rated,
@@ -137,7 +131,7 @@ export const registerGetMovieTool = (
           imdbId: omdbResult.imdbID,
           tmdbId: tmdbDetails?.id,
 
-          // Ratings (from OMDB - aggregated)
+          // Ratings (OMDB - aggregated from multiple sources)
           ratings: omdbResult.Ratings,
           metascore: omdbResult.Metascore,
           imdbRating: omdbResult.imdbRating,
@@ -145,20 +139,20 @@ export const registerGetMovieTool = (
           tmdbRating: tmdbDetails?.vote_average,
           tmdbVoteCount: tmdbDetails?.vote_count,
 
-          // Box office & Awards (from OMDB)
+          // Box office & Awards (OMDB)
           boxOffice: omdbResult.BoxOffice,
           awards: omdbResult.Awards,
 
-          // Budget & Revenue (from TMDB)
+          // Budget & Revenue (TMDB)
           budget: tmdbDetails?.budget,
           revenue: tmdbDetails?.revenue,
 
-          // Basic credits (from OMDB)
+          // Basic credits (OMDB)
           director: omdbResult.Director,
           writer: omdbResult.Writer,
           actors: omdbResult.Actors,
 
-          // Images (from TMDB - higher quality)
+          // Images (TMDB - higher quality)
           posterUrl: tmdbDetails
             ? tmdbClient.getImageUrl(tmdbDetails.poster_path, "w500")
             : omdbResult.Poster !== "N/A"
@@ -168,20 +162,15 @@ export const registerGetMovieTool = (
             ? tmdbClient.getImageUrl(tmdbDetails.backdrop_path, "w1280")
             : null,
 
-          // Tagline & Overview (from TMDB)
+          // Additional metadata (TMDB)
           tagline: tmdbDetails?.tagline,
           overview: tmdbDetails?.overview,
-
-          // Genres (from TMDB - structured)
           genres: tmdbDetails?.genres.map((g) => g.name),
-
-          // Production info (from TMDB)
           productionCompanies: tmdbDetails?.production_companies.map(
             (c) => c.name
           ),
         };
 
-        // Add detailed credits from TMDB if available
         if (tmdbCredits) {
           output.cast = tmdbCredits.cast.slice(0, 10).map((member) => ({
             name: member.name,
@@ -190,7 +179,6 @@ export const registerGetMovieTool = (
             profileImageUrl: tmdbClient.getImageUrl(member.profile_path, "w185"),
           }));
 
-          // Get key crew members
           const directors = tmdbCredits.crew.filter(
             (member) => member.job === "Director"
           );

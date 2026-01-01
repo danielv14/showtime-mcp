@@ -48,7 +48,6 @@ export const registerGetWhereToWatchTool = (
         let movieId: number | undefined = tmdbId;
         let movieTitle: string | undefined;
 
-        // Find TMDB movie ID if not provided
         if (!movieId) {
           if (imdbId) {
             const movie = await tmdbClient.getMovieByImdbId(imdbId);
@@ -72,13 +71,11 @@ export const registerGetWhereToWatchTool = (
           return createErrorResponse("getting watch providers", new Error("Could not determine movie ID"));
         }
 
-        // Get movie title if we don't have it yet
         if (!movieTitle) {
           const movieDetails = await tmdbClient.getMovieDetails(movieId);
           movieTitle = movieDetails.title;
         }
 
-        // Get watch providers
         const watchProviders = await tmdbClient.getWatchProviders(movieId);
         const regionData = watchProviders.results[region.toUpperCase()];
 

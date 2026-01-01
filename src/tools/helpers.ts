@@ -1,7 +1,6 @@
 import type { TmdbMovieSearchResult } from "../tmdb-api/types.js";
 import type { OmdbSeasonEpisode } from "../omdb-api/types.js";
 
-// Response helpers
 export const createSuccessResponse = (data: unknown) => ({
   content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
 });
@@ -16,14 +15,12 @@ export const createErrorResponse = (context: string, error: unknown) => ({
   isError: true,
 });
 
-// Text utilities
 export const truncateText = (text: string, maxLength: number): string =>
   text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
 
 export const extractYear = (releaseDate: string | undefined | null): string =>
   releaseDate?.split("-")[0] || "N/A";
 
-// Validation helpers
 export const requireAtLeastOne = (
   context: string,
   fields: Record<string, unknown>
@@ -43,7 +40,6 @@ export const requireAtLeastOne = (
   return null;
 };
 
-// OMDB Episode formatter
 export const formatOmdbEpisode = (episode: OmdbSeasonEpisode) => ({
   title: episode.Title,
   episode: episode.Episode,
@@ -52,7 +48,6 @@ export const formatOmdbEpisode = (episode: OmdbSeasonEpisode) => ({
   imdbId: episode.imdbID,
 });
 
-// TMDB Movie result formatter
 export const formatTmdbMovieResult = (
   movie: TmdbMovieSearchResult,
   getImageUrl: (path: string | null, size?: string) => string | null,
@@ -68,7 +63,6 @@ export const formatTmdbMovieResult = (
   posterUrl: getImageUrl(movie.poster_path, "w342"),
 });
 
-// Genre mapping (TMDB genre IDs)
 export const MOVIE_GENRE_MAP: Record<string, number> = {
   action: 28,
   adventure: 12,
@@ -112,7 +106,6 @@ export const TV_GENRE_MAP: Record<string, number> = {
   western: 37,
 };
 
-// Helper to look up genre ID with fuzzy matching
 export const getGenreId = (
   genreName: string,
   genreMap: Record<string, number>

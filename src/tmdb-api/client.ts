@@ -46,7 +46,6 @@ export const createTmdbClient = (apiKey: string) => {
     },
   });
 
-  // Helper to build full image URLs
   const getImageUrl = (
     path: string | null,
     size: string = "w500"
@@ -55,7 +54,6 @@ export const createTmdbClient = (apiKey: string) => {
     return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
   };
 
-  // Search movies
   const searchMovies = async (
     query: string,
     options?: { page?: number; year?: number }
@@ -69,7 +67,6 @@ export const createTmdbClient = (apiKey: string) => {
       .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
   };
 
-  // Search people (actors, directors, etc.)
   const searchPerson = async (
     query: string,
     options?: { page?: number }
@@ -82,14 +79,12 @@ export const createTmdbClient = (apiKey: string) => {
       .json<TmdbSearchResponse<TmdbPersonSearchResult>>();
   };
 
-  // Get person details
   const getPersonDetails = async (
     personId: number
   ): Promise<TmdbPersonDetails> => {
     return kyClient.get(`person/${personId}`).json<TmdbPersonDetails>();
   };
 
-  // Get person's movie credits (filmography)
   const getPersonMovieCredits = async (
     personId: number
   ): Promise<TmdbPersonMovieCredits> => {
@@ -98,12 +93,10 @@ export const createTmdbClient = (apiKey: string) => {
       .json<TmdbPersonMovieCredits>();
   };
 
-  // Get movie details
   const getMovieDetails = async (movieId: number): Promise<TmdbMovieDetails> => {
     return kyClient.get(`movie/${movieId}`).json<TmdbMovieDetails>();
   };
 
-  // Get movie details by IMDB ID
   const getMovieByImdbId = async (
     imdbId: string
   ): Promise<TmdbMovieDetails | null> => {
@@ -117,16 +110,14 @@ export const createTmdbClient = (apiKey: string) => {
     if (!firstResult) {
       return null;
     }
-    // The find endpoint returns partial data, so we fetch full details
+    // Find endpoint returns partial data, fetch full details
     return getMovieDetails(firstResult.id);
   };
 
-  // Get movie credits (cast & crew)
   const getMovieCredits = async (movieId: number): Promise<TmdbCredits> => {
     return kyClient.get(`movie/${movieId}/credits`).json<TmdbCredits>();
   };
 
-  // Get watch providers for a movie
   const getWatchProviders = async (
     movieId: number
   ): Promise<TmdbWatchProviders> => {
@@ -135,7 +126,6 @@ export const createTmdbClient = (apiKey: string) => {
       .json<TmdbWatchProviders>();
   };
 
-  // Discover movies with filters
   const discoverMovies = async (
     options: DiscoverMoviesOptions
   ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
@@ -166,7 +156,6 @@ export const createTmdbClient = (apiKey: string) => {
       .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
   };
 
-  // Get genre list (useful for discover)
   const getMovieGenres = async (): Promise<TmdbGenre[]> => {
     return kyClient
       .get("genre/movie/list")
@@ -174,7 +163,6 @@ export const createTmdbClient = (apiKey: string) => {
       .then((response) => response.genres);
   };
 
-  // Get TV genre list
   const getTvGenres = async (): Promise<TmdbGenre[]> => {
     return kyClient
       .get("genre/tv/list")
@@ -182,7 +170,6 @@ export const createTmdbClient = (apiKey: string) => {
       .then((response) => response.genres);
   };
 
-  // Get trending movies, TV, or all
   const getTrending = async (
     mediaType: TmdbMediaType,
     timeWindow: TmdbTimeWindow,
@@ -196,7 +183,6 @@ export const createTmdbClient = (apiKey: string) => {
       .json<TmdbSearchResponse<TmdbTrendingResult>>();
   };
 
-  // Get movie recommendations
   const getMovieRecommendations = async (
     movieId: number,
     options?: { page?: number }
@@ -209,7 +195,7 @@ export const createTmdbClient = (apiKey: string) => {
       .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
   };
 
-  // Get similar movies (different algorithm than recommendations)
+  // Different algorithm than recommendations - based on genres/keywords
   const getSimilarMovies = async (
     movieId: number,
     options?: { page?: number }
@@ -222,7 +208,6 @@ export const createTmdbClient = (apiKey: string) => {
       .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
   };
 
-  // Search TV series
   const searchTv = async (
     query: string,
     options?: { page?: number; year?: number }
@@ -236,12 +221,10 @@ export const createTmdbClient = (apiKey: string) => {
       .json<TmdbSearchResponse<TmdbTvSearchResult>>();
   };
 
-  // Get TV series details
   const getTvDetails = async (tvId: number): Promise<TmdbTvDetails> => {
     return kyClient.get(`tv/${tvId}`).json<TmdbTvDetails>();
   };
 
-  // Get TV series recommendations
   const getTvRecommendations = async (
     tvId: number,
     options?: { page?: number }
@@ -254,7 +237,7 @@ export const createTmdbClient = (apiKey: string) => {
       .json<TmdbSearchResponse<TmdbTvSearchResult>>();
   };
 
-  // Get similar TV series
+  // Different algorithm than recommendations - based on genres/keywords
   const getSimilarTv = async (
     tvId: number,
     options?: { page?: number }
@@ -267,7 +250,6 @@ export const createTmdbClient = (apiKey: string) => {
       .json<TmdbSearchResponse<TmdbTvSearchResult>>();
   };
 
-  // Get collection (movie franchise) details
   const getCollection = async (
     collectionId: number
   ): Promise<TmdbCollectionDetails> => {

@@ -83,7 +83,6 @@ export const registerDiscoverMoviesTool = (
       page,
     }) => {
       try {
-        // Convert genre name to ID if provided
         let genreId: string | undefined;
         if (genre) {
           const mappedId = getGenreId(genre, MOVIE_GENRE_MAP);
@@ -99,7 +98,6 @@ export const registerDiscoverMoviesTool = (
           }
         }
 
-        // Build people filter
         let withPeople: string | undefined;
         const peopleIds: number[] = [];
         if (directorId) peopleIds.push(directorId);
@@ -115,7 +113,7 @@ export const registerDiscoverMoviesTool = (
           with_genres: genreId,
           with_people: withPeople,
           vote_average_gte: minRating,
-          vote_count_gte: minRating ? 50 : undefined, // Require some votes if filtering by rating
+          vote_count_gte: minRating ? 50 : undefined,
           with_original_language: language,
         });
 
@@ -129,7 +127,7 @@ export const registerDiscoverMoviesTool = (
           results: formattedResults,
           totalResults: result.total_results,
           page: result.page,
-          totalPages: Math.min(result.total_pages, 500), // TMDB limits to 500 pages
+          totalPages: Math.min(result.total_pages, 500),
           filters: {
             year,
             genre,

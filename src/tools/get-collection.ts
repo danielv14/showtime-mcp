@@ -49,11 +49,9 @@ export const registerGetCollectionTool = (
 
         let finalCollectionId: number | undefined = collectionId;
 
-        // Find collection from movie if not provided directly
         if (!finalCollectionId) {
           let movieId: number | undefined = movieTmdbId;
 
-          // Search for movie by title if needed
           if (!movieId && movieTitle) {
             const searchResult = await tmdbClient.searchMovies(movieTitle);
             const firstResult = searchResult.results[0];
@@ -73,7 +71,6 @@ export const registerGetCollectionTool = (
             );
           }
 
-          // Get movie details to find collection
           const movieDetails = await tmdbClient.getMovieDetails(movieId);
           if (!movieDetails.belongs_to_collection) {
             return createErrorResponse(
@@ -87,10 +84,8 @@ export const registerGetCollectionTool = (
           finalCollectionId = movieDetails.belongs_to_collection.id;
         }
 
-        // Get collection details
         const collection = await tmdbClient.getCollection(finalCollectionId);
 
-        // Sort movies by release date
         const sortedMovies = [...collection.parts].sort((a, b) => {
           const dateA = a.release_date || "";
           const dateB = b.release_date || "";

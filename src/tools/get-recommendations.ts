@@ -45,7 +45,6 @@ export const registerGetRecommendationsTool = (
         let movieId: number | undefined = tmdbId;
         let sourceMovieTitle: string | undefined;
 
-        // Find movie ID if only title provided
         if (!movieId && title) {
           const searchResult = await tmdbClient.searchMovies(title);
           const firstResult = searchResult.results[0];
@@ -66,7 +65,6 @@ export const registerGetRecommendationsTool = (
           );
         }
 
-        // Get source movie title if we don't have it
         if (!sourceMovieTitle) {
           const movieDetails = await tmdbClient.getMovieDetails(movieId);
           sourceMovieTitle = movieDetails.title;

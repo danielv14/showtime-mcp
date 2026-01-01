@@ -165,11 +165,9 @@ export const createOmdbClient = (apiKey: string) => {
   const getAllEpisodes = async (
     options: GetAllEpisodesOptions
   ): Promise<OmdbSeasonResponse[]> => {
-    // First get the series to find total seasons
-    const series = await getById({ imdbId: options.seriesId }) as OmdbSeriesDetails;
+    const series = (await getById({ imdbId: options.seriesId })) as OmdbSeriesDetails;
     const totalSeasons = parseInt(series.totalSeasons, 10);
 
-    // Fetch all seasons in parallel
     const seasonPromises = Array.from({ length: totalSeasons }, (_, index) =>
       getSeason({ seriesId: options.seriesId, season: index + 1 })
     );
