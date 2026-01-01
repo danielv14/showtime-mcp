@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { OmdbClient } from "../omdb-api/index.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers.js";
 
 export const registerGetAllEpisodesTool = (
   server: McpServer,
@@ -24,7 +25,7 @@ export const registerGetAllEpisodesTool = (
           seriesId,
         });
 
-        const output = {
+        return createSuccessResponse({
           title: seasons[0]?.Title || "Unknown",
           totalSeasons: seasons.length,
           seasons: seasons.map((season) => ({
@@ -38,28 +39,9 @@ export const registerGetAllEpisodesTool = (
               imdbId: episode.imdbID,
             })),
           })),
-        };
-
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(output, null, 2),
-            },
-          ],
-        };
+        });
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Error getting all episodes: ${errorMessage}`,
-            },
-          ],
-          isError: true,
-        };
+        return createErrorResponse("getting all episodes", error);
       }
     }
   );

@@ -1,7 +1,7 @@
 {
-  "name": "omdb-api-mcp-server",
+  "name": "showtime-mcp",
   "version": "1.0.0",
-  "description": "MCP server for the OMDB API - search movies, TV series, and episodes",
+  "description": "MCP server for movies and TV data.",
   "module": "src/index.ts",
   "type": "module",
   "private": true,

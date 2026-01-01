@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { OmdbClient } from "../omdb-api/index.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers.js";
 
 export const registerSearchSeriesTool = (
   server: McpServer,
@@ -37,32 +38,13 @@ export const registerSearchSeriesTool = (
           type: series.Type,
         }));
 
-        const output = {
+        return createSuccessResponse({
           results: formattedResults,
           totalResults: parseInt(result.totalResults, 10),
           page: page || 1,
-        };
-
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(output, null, 2),
-            },
-          ],
-        };
+        });
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Error searching series: ${errorMessage}`,
-            },
-          ],
-          isError: true,
-        };
+        return createErrorResponse("searching series", error);
       }
     }
   );

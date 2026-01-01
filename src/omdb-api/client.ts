@@ -71,13 +71,14 @@ export const createOmdbClient = (apiKey: string) => {
     return response as T;
   };
 
-  const searchMovies = async (
+  const search = async (
+    type: "movie" | "series",
     options: SearchOptions
   ): Promise<OmdbSearchResponse> => {
     const searchParams: Record<string, string | number> = {
       apikey: apiKey,
       s: options.query,
-      type: "movie",
+      type,
     };
 
     if (options.year) searchParams.y = options.year;
@@ -90,24 +91,8 @@ export const createOmdbClient = (apiKey: string) => {
     return handleResponse(response);
   };
 
-  const searchSeries = async (
-    options: SearchOptions
-  ): Promise<OmdbSearchResponse> => {
-    const searchParams: Record<string, string | number> = {
-      apikey: apiKey,
-      s: options.query,
-      type: "series",
-    };
-
-    if (options.year) searchParams.y = options.year;
-    if (options.page) searchParams.page = options.page;
-
-    const response = await kyClient
-      .get("", { searchParams })
-      .json<OmdbSearchResponse | OmdbErrorResponse>();
-
-    return handleResponse(response);
-  };
+  const searchMovies = (options: SearchOptions) => search("movie", options);
+  const searchSeries = (options: SearchOptions) => search("series", options);
 
   const getById = async (
     options: GetByIdOptions

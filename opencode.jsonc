@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "showtime": {
+      "type": "local",
+      "command": ["bun", "run", "start"],
+      "enabled": true
+    }
+  }
+}

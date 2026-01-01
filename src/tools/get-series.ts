@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { OmdbClient, OmdbSeriesDetails } from "../omdb-api/index.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers.js";
 
 export const registerGetSeriesTool = (
   server: McpServer,
@@ -34,15 +35,7 @@ export const registerGetSeriesTool = (
     async ({ imdbId, title, year, plot }) => {
       try {
         if (!imdbId && !title) {
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: "Error: Either 'imdbId' or 'title' must be provided",
-              },
-            ],
-            isError: true,
-          };
+          return createErrorResponse("getting series details", new Error("Either 'imdbId' or 'title' must be provided"));
         }
 
         let result;
@@ -58,20 +51,12 @@ export const registerGetSeriesTool = (
         }
 
         if (result.Type !== "series") {
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: `Error: The result is a ${result.Type}, not a series. Use the appropriate tool for ${result.Type}.`,
-              },
-            ],
-            isError: true,
-          };
+          return createErrorResponse("getting series details", new Error(`The result is a ${result.Type}, not a series. Use the appropriate tool for ${result.Type}.`));
         }
 
         const seriesResult = result as OmdbSeriesDetails;
 
-        const output = {
+        return createSuccessResponse({
           title: seriesResult.Title,
           year: seriesResult.Year,
           rated: seriesResult.Rated,
@@ -91,28 +76,9 @@ export const registerGetSeriesTool = (
           imdbVotes: seriesResult.imdbVotes,
           imdbId: seriesResult.imdbID,
           totalSeasons: seriesResult.totalSeasons,
-        };
-
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(output, null, 2),
-            },
-          ],
-        };
+        });
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Error getting series details: ${errorMessage}`,
-            },
-          ],
-          isError: true,
-        };
+        return createErrorResponse("getting series details", error);
       }
     }
   );
