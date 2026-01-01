@@ -1,31 +1,13 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import { createSuccessResponse, createErrorResponse } from "./helpers.js";
-
-// Genre name to ID mapping
-const GENRE_MAP: Record<string, number> = {
-  action: 28,
-  adventure: 12,
-  animation: 16,
-  comedy: 35,
-  crime: 80,
-  documentary: 99,
-  drama: 18,
-  family: 10751,
-  fantasy: 14,
-  history: 36,
-  horror: 27,
-  music: 10402,
-  mystery: 9648,
-  romance: 10749,
-  "science fiction": 878,
-  "sci-fi": 878,
-  "tv movie": 10770,
-  thriller: 53,
-  war: 10752,
-  western: 37,
-};
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  formatTmdbMovieResult,
+  MOVIE_GENRE_MAP,
+  getGenreId,
+} from "./helpers.js";
 
 export const registerDiscoverMoviesTool = (
   server: McpServer,
@@ -90,17 +72,30 @@ export const registerDiscoverMoviesTool = (
           .describe("Page number for pagination (20 results per page)"),
       },
     },
-    async ({ year, genre, minRating, directorId, actorId, language, sortBy, page }) => {
+    async ({
+      year,
+      genre,
+      minRating,
+      directorId,
+      actorId,
+      language,
+      sortBy,
+      page,
+    }) => {
       try {
         // Convert genre name to ID if provided
         let genreId: string | undefined;
         if (genre) {
-          const normalizedGenre = genre.toLowerCase().trim();
-          const mappedId = GENRE_MAP[normalizedGenre];
+          const mappedId = getGenreId(genre, MOVIE_GENRE_MAP);
           if (mappedId) {
             genreId = mappedId.toString();
           } else {
-            return createErrorResponse("discovering movies", new Error(`Unknown genre '${genre}'. Available genres: ${Object.keys(GENRE_MAP).join(", ")}`));
+            return createErrorResponse(
+              "discovering movies",
+              new Error(
+                `Unknown genre '${genre}'. Available genres: ${Object.keys(MOVIE_GENRE_MAP).join(", ")}`
+              )
+            );
           }
         }
 
@@ -124,19 +119,11 @@ export const registerDiscoverMoviesTool = (
           with_original_language: language,
         });
 
-        const formattedResults = result.results.map((movie) => ({
-          tmdbId: movie.id,
-          title: movie.title,
-          year: movie.release_date?.split("-")[0] || "N/A",
-          releaseDate: movie.release_date || "N/A",
-          overview:
-            movie.overview.length > 200
-              ? movie.overview.substring(0, 200) + "..."
-              : movie.overview,
-          tmdbRating: movie.vote_average,
-          voteCount: movie.vote_count,
-          posterUrl: tmdbClient.getImageUrl(movie.poster_path, "w342"),
-        }));
+        const formattedResults = result.results.map((movie) =>
+          formatTmdbMovieResult(movie, tmdbClient.getImageUrl, {
+            includeVoteCount: true,
+          })
+        );
 
         return createSuccessResponse({
           results: formattedResults,

@@ -2,7 +2,11 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { OmdbClient } from "../omdb-api/index.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import { createSuccessResponse, createErrorResponse } from "./helpers.js";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  requireAtLeastOne,
+} from "./helpers.js";
 
 export const registerGetMovieTool = (
   server: McpServer,
@@ -44,9 +48,12 @@ export const registerGetMovieTool = (
     },
     async ({ imdbId, tmdbId, title, year, plot, includeCredits = true }) => {
       try {
-        if (!imdbId && !tmdbId && !title) {
-          return createErrorResponse("getting movie details", new Error("At least one of 'imdbId', 'tmdbId', or 'title' must be provided"));
-        }
+        const validationError = requireAtLeastOne("getting movie details", {
+          imdbId,
+          tmdbId,
+          title,
+        });
+        if (validationError) return validationError;
 
         let finalImdbId: string | undefined = imdbId;
         let finalTmdbId: number | undefined = tmdbId;

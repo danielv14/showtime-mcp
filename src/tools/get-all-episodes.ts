@@ -1,7 +1,11 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { OmdbClient } from "../omdb-api/index.js";
-import { createSuccessResponse, createErrorResponse } from "./helpers.js";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  formatOmdbEpisode,
+} from "./helpers.js";
 
 export const registerGetAllEpisodesTool = (
   server: McpServer,
@@ -31,13 +35,7 @@ export const registerGetAllEpisodesTool = (
           seasons: seasons.map((season) => ({
             season: season.Season,
             episodeCount: season.Episodes.length,
-            episodes: season.Episodes.map((episode) => ({
-              title: episode.Title,
-              episode: episode.Episode,
-              released: episode.Released,
-              imdbRating: episode.imdbRating,
-              imdbId: episode.imdbID,
-            })),
+            episodes: season.Episodes.map(formatOmdbEpisode),
           })),
         });
       } catch (error) {

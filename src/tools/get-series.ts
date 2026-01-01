@@ -1,7 +1,11 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { OmdbClient, OmdbSeriesDetails } from "../omdb-api/index.js";
-import { createSuccessResponse, createErrorResponse } from "./helpers.js";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  requireAtLeastOne,
+} from "./helpers.js";
 
 export const registerGetSeriesTool = (
   server: McpServer,
@@ -34,9 +38,11 @@ export const registerGetSeriesTool = (
     },
     async ({ imdbId, title, year, plot }) => {
       try {
-        if (!imdbId && !title) {
-          return createErrorResponse("getting series details", new Error("Either 'imdbId' or 'title' must be provided"));
-        }
+        const validationError = requireAtLeastOne("getting series details", {
+          imdbId,
+          title,
+        });
+        if (validationError) return validationError;
 
         let result;
         if (imdbId) {

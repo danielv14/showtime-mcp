@@ -1,7 +1,11 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import { createSuccessResponse, createErrorResponse } from "./helpers.js";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  formatTmdbMovieResult,
+} from "./helpers.js";
 
 export const registerSearchMoviesTool = (
   server: McpServer,
@@ -30,18 +34,9 @@ export const registerSearchMoviesTool = (
       try {
         const result = await tmdbClient.searchMovies(query, { page, year });
 
-        const formattedResults = result.results.map((movie) => ({
-          tmdbId: movie.id,
-          title: movie.title,
-          year: movie.release_date?.split("-")[0] || "N/A",
-          releaseDate: movie.release_date || "N/A",
-          overview:
-            movie.overview.length > 200
-              ? movie.overview.substring(0, 200) + "..."
-              : movie.overview,
-          tmdbRating: movie.vote_average,
-          posterUrl: tmdbClient.getImageUrl(movie.poster_path, "w342"),
-        }));
+        const formattedResults = result.results.map((movie) =>
+          formatTmdbMovieResult(movie, tmdbClient.getImageUrl)
+        );
 
         return createSuccessResponse({
           results: formattedResults,

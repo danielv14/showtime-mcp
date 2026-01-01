@@ -1,7 +1,11 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import { createSuccessResponse, createErrorResponse } from "./helpers.js";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  requireAtLeastOne,
+} from "./helpers.js";
 
 export const registerGetWhereToWatchTool = (
   server: McpServer,
@@ -34,9 +38,12 @@ export const registerGetWhereToWatchTool = (
     },
     async ({ title, tmdbId, imdbId, region = "US" }) => {
       try {
-        if (!title && !tmdbId && !imdbId) {
-          return createErrorResponse("getting watch providers", new Error("At least one of 'title', 'tmdbId', or 'imdbId' must be provided"));
-        }
+        const validationError = requireAtLeastOne("getting watch providers", {
+          title,
+          tmdbId,
+          imdbId,
+        });
+        if (validationError) return validationError;
 
         let movieId: number | undefined = tmdbId;
         let movieTitle: string | undefined;

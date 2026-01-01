@@ -3,6 +3,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { OmdbClient } from "../omdb-api/index.js";
 import { createSuccessResponse, createErrorResponse } from "./helpers.js";
 
+const OMDB_RESULTS_PER_PAGE = 10;
+
 export const registerSearchSeriesTool = (
   server: McpServer,
   omdbClient: OmdbClient
@@ -38,10 +40,13 @@ export const registerSearchSeriesTool = (
           type: series.Type,
         }));
 
+        const totalResults = parseInt(result.totalResults, 10);
+
         return createSuccessResponse({
           results: formattedResults,
-          totalResults: parseInt(result.totalResults, 10),
+          totalResults,
           page: page || 1,
+          totalPages: Math.ceil(totalResults / OMDB_RESULTS_PER_PAGE),
         });
       } catch (error) {
         return createErrorResponse("searching series", error);

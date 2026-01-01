@@ -26,6 +26,7 @@ src/
 │   └── client.ts         # TMDB API wrapper using ky
 └── tools/                # MCP tool implementations
     ├── index.ts          # Registers all tools
+    ├── helpers.ts        # Shared helper functions and constants
     │
     │   # TMDB-powered tools
     ├── search-movies.ts      # Search movies by title (TMDB)
@@ -33,6 +34,10 @@ src/
     ├── discover-movies.ts    # Discover movies with filters
     ├── get-where-to-watch.ts # Find streaming/rental options
     ├── get-filmography.ts    # Get person's filmography
+    ├── get-trending.ts       # Get trending movies/TV
+    ├── get-recommendations.ts    # Get movie recommendations
+    ├── get-tv-recommendations.ts # Get TV series recommendations
+    ├── get-collection.ts     # Get movie collection/franchise
     │
     │   # Hybrid tools (OMDB + TMDB)
     ├── get-movie.ts          # Get movie details (ratings from OMDB, cast/images from TMDB)
@@ -63,12 +68,29 @@ src/
 | Search movies | Basic | Advanced (fuzzy) | TMDB |
 | Search people | No | Yes | TMDB |
 | Discover/filter | No | Yes (30+ filters) | TMDB |
+| Trending | No | Yes | TMDB |
+| Recommendations | No | Yes | TMDB |
+| Collections/Franchises | No | Yes | TMDB |
 | Ratings | IMDb + RT + Metacritic | TMDB only | OMDB |
 | Box office | Detailed | Basic | OMDB |
 | Awards | Yes | No | OMDB |
 | Images | Poster only | Posters, backdrops, profiles | TMDB |
 | Cast/Crew | Basic list | Full filmographies | TMDB |
 | Streaming providers | No | Yes (via JustWatch) | TMDB |
+
+## Helper Functions
+
+The `helpers.ts` module provides shared utilities:
+
+- `createSuccessResponse(data)` - Format successful tool responses
+- `createErrorResponse(context, error)` - Format error responses
+- `truncateText(text, maxLength)` - Truncate text with ellipsis
+- `extractYear(releaseDate)` - Extract year from ISO date string
+- `requireAtLeastOne(context, fields)` - Validate at least one field is provided
+- `formatTmdbMovieResult(movie, getImageUrl, options)` - Format TMDB movie search results
+- `formatOmdbEpisode(episode)` - Format OMDB episode data
+- `MOVIE_GENRE_MAP` / `TV_GENRE_MAP` - Genre name to TMDB ID mappings
+- `getGenreId(genreName, genreMap)` - Look up genre ID by name
 
 ## Development Notes
 

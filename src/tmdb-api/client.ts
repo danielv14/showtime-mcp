@@ -11,6 +11,12 @@ import type {
   TmdbGenre,
   TmdbFindResponse,
   DiscoverMoviesOptions,
+  TmdbTimeWindow,
+  TmdbMediaType,
+  TmdbTrendingResult,
+  TmdbTvSearchResult,
+  TmdbTvDetails,
+  TmdbCollectionDetails,
 } from "./types.js";
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
@@ -168,6 +174,108 @@ export const createTmdbClient = (apiKey: string) => {
       .then((response) => response.genres);
   };
 
+  // Get TV genre list
+  const getTvGenres = async (): Promise<TmdbGenre[]> => {
+    return kyClient
+      .get("genre/tv/list")
+      .json<{ genres: TmdbGenre[] }>()
+      .then((response) => response.genres);
+  };
+
+  // Get trending movies, TV, or all
+  const getTrending = async (
+    mediaType: TmdbMediaType,
+    timeWindow: TmdbTimeWindow,
+    options?: { page?: number }
+  ): Promise<TmdbSearchResponse<TmdbTrendingResult>> => {
+    const searchParams: Record<string, string | number> = {};
+    if (options?.page) searchParams.page = options.page;
+
+    return kyClient
+      .get(`trending/${mediaType}/${timeWindow}`, { searchParams })
+      .json<TmdbSearchResponse<TmdbTrendingResult>>();
+  };
+
+  // Get movie recommendations
+  const getMovieRecommendations = async (
+    movieId: number,
+    options?: { page?: number }
+  ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
+    const searchParams: Record<string, string | number> = {};
+    if (options?.page) searchParams.page = options.page;
+
+    return kyClient
+      .get(`movie/${movieId}/recommendations`, { searchParams })
+      .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
+  };
+
+  // Get similar movies (different algorithm than recommendations)
+  const getSimilarMovies = async (
+    movieId: number,
+    options?: { page?: number }
+  ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
+    const searchParams: Record<string, string | number> = {};
+    if (options?.page) searchParams.page = options.page;
+
+    return kyClient
+      .get(`movie/${movieId}/similar`, { searchParams })
+      .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
+  };
+
+  // Search TV series
+  const searchTv = async (
+    query: string,
+    options?: { page?: number; year?: number }
+  ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
+    const searchParams: Record<string, string | number> = { query };
+    if (options?.page) searchParams.page = options.page;
+    if (options?.year) searchParams.first_air_date_year = options.year;
+
+    return kyClient
+      .get("search/tv", { searchParams })
+      .json<TmdbSearchResponse<TmdbTvSearchResult>>();
+  };
+
+  // Get TV series details
+  const getTvDetails = async (tvId: number): Promise<TmdbTvDetails> => {
+    return kyClient.get(`tv/${tvId}`).json<TmdbTvDetails>();
+  };
+
+  // Get TV series recommendations
+  const getTvRecommendations = async (
+    tvId: number,
+    options?: { page?: number }
+  ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
+    const searchParams: Record<string, string | number> = {};
+    if (options?.page) searchParams.page = options.page;
+
+    return kyClient
+      .get(`tv/${tvId}/recommendations`, { searchParams })
+      .json<TmdbSearchResponse<TmdbTvSearchResult>>();
+  };
+
+  // Get similar TV series
+  const getSimilarTv = async (
+    tvId: number,
+    options?: { page?: number }
+  ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
+    const searchParams: Record<string, string | number> = {};
+    if (options?.page) searchParams.page = options.page;
+
+    return kyClient
+      .get(`tv/${tvId}/similar`, { searchParams })
+      .json<TmdbSearchResponse<TmdbTvSearchResult>>();
+  };
+
+  // Get collection (movie franchise) details
+  const getCollection = async (
+    collectionId: number
+  ): Promise<TmdbCollectionDetails> => {
+    return kyClient
+      .get(`collection/${collectionId}`)
+      .json<TmdbCollectionDetails>();
+  };
+
   return {
     searchMovies,
     searchPerson,
@@ -179,6 +287,15 @@ export const createTmdbClient = (apiKey: string) => {
     getWatchProviders,
     discoverMovies,
     getMovieGenres,
+    getTvGenres,
+    getTrending,
+    getMovieRecommendations,
+    getSimilarMovies,
+    searchTv,
+    getTvDetails,
+    getTvRecommendations,
+    getSimilarTv,
+    getCollection,
     getImageUrl,
   };
 };

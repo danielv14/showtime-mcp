@@ -100,6 +100,12 @@ export interface TmdbMovieDetails {
   production_countries: { iso_3166_1: string; name: string }[];
   spoken_languages: { iso_639_1: string; name: string }[];
   status: string;
+  belongs_to_collection: {
+    id: number;
+    name: string;
+    poster_path: string | null;
+    backdrop_path: string | null;
+  } | null;
 }
 
 // Cast & Crew
@@ -192,4 +198,81 @@ export interface TmdbErrorResponse {
   success: false;
   status_code: number;
   status_message: string;
+}
+
+// Trending
+export type TmdbTimeWindow = "day" | "week";
+export type TmdbMediaType = "movie" | "tv" | "all";
+
+// TV Series
+export interface TmdbTvSearchResult {
+  id: number;
+  name: string;
+  original_name: string;
+  overview: string;
+  first_air_date: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  vote_average: number;
+  vote_count: number;
+  genre_ids: number[];
+}
+
+export interface TmdbTvDetails {
+  id: number;
+  name: string;
+  original_name: string;
+  overview: string;
+  tagline: string;
+  first_air_date: string;
+  last_air_date: string;
+  number_of_seasons: number;
+  number_of_episodes: number;
+  episode_run_time: number[];
+  poster_path: string | null;
+  backdrop_path: string | null;
+  vote_average: number;
+  vote_count: number;
+  genres: { id: number; name: string }[];
+  networks: { id: number; name: string; logo_path: string | null }[];
+  production_companies: {
+    id: number;
+    name: string;
+    logo_path: string | null;
+  }[];
+  status: string;
+  type: string;
+  in_production: boolean;
+  created_by: { id: number; name: string; profile_path: string | null }[];
+}
+
+// Collection (movie franchise)
+export interface TmdbCollectionDetails {
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  parts: TmdbMovieSearchResult[];
+}
+
+// Combined trending result (can be movie or TV)
+export interface TmdbTrendingResult {
+  id: number;
+  media_type: "movie" | "tv";
+  // Movie fields
+  title?: string;
+  original_title?: string;
+  release_date?: string;
+  // TV fields
+  name?: string;
+  original_name?: string;
+  first_air_date?: string;
+  // Common fields
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  vote_average: number;
+  vote_count: number;
+  genre_ids: number[];
 }

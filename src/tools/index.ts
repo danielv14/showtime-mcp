@@ -8,6 +8,10 @@ import { registerSearchPersonTool } from "./search-person.js";
 import { registerDiscoverMoviesTool } from "./discover-movies.js";
 import { registerGetWhereToWatchTool } from "./get-where-to-watch.js";
 import { registerGetFilmographyTool } from "./get-filmography.js";
+import { registerGetTrendingTool } from "./get-trending.js";
+import { registerGetRecommendationsTool } from "./get-recommendations.js";
+import { registerGetCollectionTool } from "./get-collection.js";
+import { registerGetTvRecommendationsTool } from "./get-tv-recommendations.js";
 
 // Hybrid tools (OMDB + TMDB)
 import { registerGetMovieTool } from "./get-movie.js";
@@ -30,6 +34,10 @@ export const registerAllTools = (
   registerDiscoverMoviesTool(server, tmdbClient);
   registerGetWhereToWatchTool(server, tmdbClient);
   registerGetFilmographyTool(server, tmdbClient);
+  registerGetTrendingTool(server, tmdbClient);
+  registerGetRecommendationsTool(server, tmdbClient);
+  registerGetCollectionTool(server, tmdbClient);
+  registerGetTvRecommendationsTool(server, tmdbClient);
 
   // Hybrid tool (combines OMDB ratings with TMDB data)
   registerGetMovieTool(server, omdbClient, tmdbClient);
