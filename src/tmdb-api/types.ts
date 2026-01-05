@@ -276,3 +276,95 @@ export interface TmdbTrendingResult {
   vote_count: number;
   genre_ids: number[];
 }
+
+// Multi-search result (can be movie, TV, or person)
+export interface TmdbMultiSearchResult {
+  id: number;
+  media_type: "movie" | "tv" | "person";
+  // Movie fields
+  title?: string;
+  original_title?: string;
+  release_date?: string;
+  // TV fields
+  name?: string;
+  original_name?: string;
+  first_air_date?: string;
+  // Person fields
+  known_for_department?: string;
+  known_for?: TmdbMovieSearchResult[];
+  // Common fields
+  overview?: string;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
+  profile_path?: string | null;
+  vote_average?: number;
+  vote_count?: number;
+  genre_ids?: number[];
+}
+
+// Video result (trailers, teasers, etc.)
+export interface TmdbVideo {
+  id: string;
+  key: string; // YouTube/Vimeo key
+  name: string;
+  site: string; // "YouTube", "Vimeo"
+  size: number; // 360, 480, 720, 1080
+  type: string; // "Trailer", "Teaser", "Clip", "Behind the Scenes", "Featurette"
+  official: boolean;
+  published_at: string;
+  iso_639_1: string;
+  iso_3166_1: string;
+}
+
+export interface TmdbVideosResponse {
+  id: number;
+  results: TmdbVideo[];
+}
+
+// Reviews
+export interface TmdbReview {
+  id: string;
+  author: string;
+  author_details: {
+    name: string;
+    username: string;
+    avatar_path: string | null;
+    rating: number | null;
+  };
+  content: string;
+  created_at: string;
+  updated_at: string;
+  url: string;
+}
+
+export interface TmdbReviewsResponse {
+  id: number;
+  page: number;
+  results: TmdbReview[];
+  total_pages: number;
+  total_results: number;
+}
+
+// Discover TV options
+export interface DiscoverTvOptions {
+  page?: number;
+  sort_by?:
+    | "popularity.desc"
+    | "popularity.asc"
+    | "first_air_date.desc"
+    | "first_air_date.asc"
+    | "vote_average.desc"
+    | "vote_average.asc";
+  first_air_date_year?: number;
+  with_genres?: string;
+  without_genres?: string;
+  with_networks?: string;
+  vote_average_gte?: number;
+  vote_average_lte?: number;
+  vote_count_gte?: number;
+  with_runtime_gte?: number;
+  with_runtime_lte?: number;
+  with_original_language?: string;
+  with_status?: string; // 0: Returning, 1: Planned, 2: In Production, 3: Ended, 4: Cancelled, 5: Pilot
+  with_type?: string; // 0: Documentary, 1: News, 2: Miniseries, 3: Reality, 4: Scripted, 5: Talk Show, 6: Video
+}

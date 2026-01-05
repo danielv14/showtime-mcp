@@ -97,8 +97,13 @@ Add the following to your OpenCode config file (`opencode.json` in your project 
 | `get_movie` | Get detailed movie information (ratings, cast, crew, images) |
 | `discover_movies` | Discover movies by genre, year, rating, actor, or director |
 | `get_movie_recommendations` | Get movie recommendations based on a specific movie |
+| `get_similar` | Get similar movies based on genres and keywords |
 | `get_collection` | Get all movies in a franchise/collection |
 | `get_where_to_watch` | Find streaming/rental/purchase options for a movie |
+| `get_videos` | Get trailers, teasers, and behind-the-scenes videos |
+| `get_reviews` | Get user reviews from the TMDB community |
+| `get_now_playing` | Get movies currently playing in theaters |
+| `get_upcoming` | Get upcoming movie releases |
 
 ### TV Series Tools
 
@@ -106,18 +111,22 @@ Add the following to your OpenCode config file (`opencode.json` in your project 
 |------|-------------|
 | `search_series` | Search for TV series by title |
 | `get_series` | Get detailed TV series information |
+| `discover_tv` | Discover TV shows by genre, year, rating, or language |
 | `get_season` | Get all episodes in a specific season |
 | `get_episode` | Get details about a specific episode |
 | `get_all_episodes` | Get all episodes across all seasons |
 | `get_tv_recommendations` | Get TV recommendations based on a specific show |
+| `get_airing_today` | Get TV shows with episodes airing today |
 
 ### People & Discovery Tools
 
 | Tool | Description |
 |------|-------------|
 | `search_person` | Search for actors, directors, and crew members |
+| `get_person_details` | Get biography, birthday, and details about a person |
 | `get_filmography` | Get a person's complete filmography |
 | `get_trending` | Get trending movies and TV shows |
+| `multi_search` | Search movies, TV shows, and people in one request |
 
 ## Example Prompts
 
@@ -127,11 +136,24 @@ Try these prompts to explore what Showtime MCP can do:
 - "Search for movies with 'inception' in the title"
 - "Find sci-fi movies from 2023 with a rating above 7"
 - "What are the top trending movies this week?"
+- "What movies are playing in theaters right now?"
+- "What movies are coming out soon?"
 
 ### Movie Details & Recommendations
 - "Get me detailed info about The Shawshank Redemption including cast and ratings"
 - "I loved Interstellar, what similar movies would you recommend?"
 - "Show me all the movies in the Marvel Cinematic Universe collection"
+- "Find movies similar to Inception based on genre"
+
+### Trailers & Videos
+- "Show me the trailer for Oppenheimer"
+- "Get behind-the-scenes videos for Dune Part Two"
+- "Find teasers for upcoming Marvel movies"
+
+### Reviews
+- "Show me reviews for Dune Part Two"
+- "What do people think about The Bear?"
+- "Get user reviews for Oppenheimer"
 
 ### Streaming & Watch Options
 - "Where can I stream Oppenheimer?"
@@ -142,16 +164,22 @@ Try these prompts to explore what Showtime MCP can do:
 - "Get details about Breaking Bad including total seasons"
 - "Show me all episodes of Stranger Things season 4"
 - "I just finished The Bear, what similar shows should I watch?"
+- "Find Korean drama series with high ratings"
+- "What TV shows have new episodes airing today?"
 
 ### Actors & Directors
 - "Find movies directed by Christopher Nolan"
 - "What movies has Florence Pugh been in recently?"
 - "Show me Leonardo DiCaprio's filmography sorted by rating"
+- "Tell me about Timothée Chalamet's biography and career"
+- "When was Margot Robbie born and where is she from?"
 
-### Discovery
+### Discovery & Multi-Search
 - "Find highly-rated Korean movies"
 - "What horror movies came out in 2024?"
 - "Show me comedy movies with Ryan Gosling"
+- "Search for 'breaking' across movies, TV shows, and people"
+- "Discover crime dramas from 2023 with rating above 8"
 
 ## Development
 

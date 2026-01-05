@@ -32,12 +32,21 @@ src/
     ├── search-movies.ts      # Search movies by title (TMDB)
     ├── search-person.ts      # Search actors/directors by name
     ├── discover-movies.ts    # Discover movies with filters
+    ├── discover-tv.ts        # Discover TV shows with filters
     ├── get-where-to-watch.ts # Find streaming/rental options
     ├── get-filmography.ts    # Get person's filmography
+    ├── get-person-details.ts # Get person biography and details
     ├── get-trending.ts       # Get trending movies/TV
     ├── get-recommendations.ts    # Get movie recommendations
     ├── get-tv-recommendations.ts # Get TV series recommendations
+    ├── get-similar.ts        # Get similar movies/TV by genre
     ├── get-collection.ts     # Get movie collection/franchise
+    ├── get-reviews.ts        # Get user reviews for movies/TV
+    ├── get-videos.ts         # Get trailers and videos
+    ├── get-now-playing.ts    # Movies currently in theaters
+    ├── get-upcoming.ts       # Upcoming movie releases
+    ├── get-airing-today.ts   # TV shows airing today
+    ├── multi-search.ts       # Search movies, TV, and people at once
     │
     │   # Hybrid tools (OMDB + TMDB)
     ├── get-movie.ts          # Get movie details (ratings from OMDB, cast/images from TMDB)
@@ -77,6 +86,9 @@ src/
 | Images | Poster only | Posters, backdrops, profiles | TMDB |
 | Cast/Crew | Basic list | Full filmographies | TMDB |
 | Streaming providers | No | Yes (via JustWatch) | TMDB |
+| Trailers/Videos | No | Yes | TMDB |
+| Now Playing/Upcoming | No | Yes | TMDB |
+| Similar content | No | Yes (genre-based) | TMDB |
 
 ## Helper Functions
 

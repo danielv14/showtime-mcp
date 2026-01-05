@@ -6,12 +6,21 @@ import type { TmdbClient } from "../tmdb-api/index.js";
 import { registerSearchMoviesTool } from "./search-movies.js";
 import { registerSearchPersonTool } from "./search-person.js";
 import { registerDiscoverMoviesTool } from "./discover-movies.js";
+import { registerDiscoverTvTool } from "./discover-tv.js";
 import { registerGetWhereToWatchTool } from "./get-where-to-watch.js";
 import { registerGetFilmographyTool } from "./get-filmography.js";
 import { registerGetTrendingTool } from "./get-trending.js";
 import { registerGetRecommendationsTool } from "./get-recommendations.js";
 import { registerGetCollectionTool } from "./get-collection.js";
 import { registerGetTvRecommendationsTool } from "./get-tv-recommendations.js";
+import { registerGetVideosTool } from "./get-videos.js";
+import { registerGetNowPlayingTool } from "./get-now-playing.js";
+import { registerGetUpcomingTool } from "./get-upcoming.js";
+import { registerGetAiringTodayTool } from "./get-airing-today.js";
+import { registerGetPersonDetailsTool } from "./get-person-details.js";
+import { registerMultiSearchTool } from "./multi-search.js";
+import { registerGetSimilarTool } from "./get-similar.js";
+import { registerGetReviewsTool } from "./get-reviews.js";
 
 // Hybrid tools (OMDB + TMDB)
 import { registerGetMovieTool } from "./get-movie.js";
@@ -32,12 +41,21 @@ export const registerAllTools = (
   registerSearchMoviesTool(server, tmdbClient);
   registerSearchPersonTool(server, tmdbClient);
   registerDiscoverMoviesTool(server, tmdbClient);
+  registerDiscoverTvTool(server, tmdbClient);
   registerGetWhereToWatchTool(server, tmdbClient);
   registerGetFilmographyTool(server, tmdbClient);
   registerGetTrendingTool(server, tmdbClient);
   registerGetRecommendationsTool(server, tmdbClient);
   registerGetCollectionTool(server, tmdbClient);
   registerGetTvRecommendationsTool(server, tmdbClient);
+  registerGetVideosTool(server, tmdbClient);
+  registerGetNowPlayingTool(server, tmdbClient);
+  registerGetUpcomingTool(server, tmdbClient);
+  registerGetAiringTodayTool(server, tmdbClient);
+  registerGetPersonDetailsTool(server, tmdbClient);
+  registerMultiSearchTool(server, tmdbClient);
+  registerGetSimilarTool(server, tmdbClient);
+  registerGetReviewsTool(server, tmdbClient);
 
   // Hybrid tool (combines OMDB ratings with TMDB data)
   registerGetMovieTool(server, omdbClient, tmdbClient);

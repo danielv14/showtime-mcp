@@ -11,12 +11,16 @@ import type {
   TmdbGenre,
   TmdbFindResponse,
   DiscoverMoviesOptions,
+  DiscoverTvOptions,
   TmdbTimeWindow,
   TmdbMediaType,
   TmdbTrendingResult,
   TmdbTvSearchResult,
   TmdbTvDetails,
   TmdbCollectionDetails,
+  TmdbMultiSearchResult,
+  TmdbVideosResponse,
+  TmdbReviewsResponse,
 } from "./types.js";
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
@@ -258,6 +262,125 @@ export const createTmdbClient = (apiKey: string) => {
       .json<TmdbCollectionDetails>();
   };
 
+  const discoverTv = async (
+    options: DiscoverTvOptions
+  ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
+    const paramMapping: Record<string, string | number | undefined> = {
+      page: options.page,
+      sort_by: options.sort_by,
+      first_air_date_year: options.first_air_date_year,
+      with_genres: options.with_genres,
+      without_genres: options.without_genres,
+      with_networks: options.with_networks,
+      "vote_average.gte": options.vote_average_gte,
+      "vote_average.lte": options.vote_average_lte,
+      "vote_count.gte": options.vote_count_gte,
+      "with_runtime.gte": options.with_runtime_gte,
+      "with_runtime.lte": options.with_runtime_lte,
+      with_original_language: options.with_original_language,
+      with_status: options.with_status,
+      with_type: options.with_type,
+    };
+
+    const searchParams = Object.fromEntries(
+      Object.entries(paramMapping).filter(([_, v]) => v !== undefined)
+    ) as Record<string, string | number>;
+
+    return kyClient
+      .get("discover/tv", { searchParams })
+      .json<TmdbSearchResponse<TmdbTvSearchResult>>();
+  };
+
+  const multiSearch = async (
+    query: string,
+    options?: { page?: number }
+  ): Promise<TmdbSearchResponse<TmdbMultiSearchResult>> => {
+    const searchParams: Record<string, string | number> = { query };
+    if (options?.page) searchParams.page = options.page;
+
+    return kyClient
+      .get("search/multi", { searchParams })
+      .json<TmdbSearchResponse<TmdbMultiSearchResult>>();
+  };
+
+  const getMovieVideos = async (movieId: number): Promise<TmdbVideosResponse> => {
+    return kyClient.get(`movie/${movieId}/videos`).json<TmdbVideosResponse>();
+  };
+
+  const getTvVideos = async (tvId: number): Promise<TmdbVideosResponse> => {
+    return kyClient.get(`tv/${tvId}/videos`).json<TmdbVideosResponse>();
+  };
+
+  const getNowPlayingMovies = async (
+    options?: { page?: number; region?: string }
+  ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
+    const searchParams: Record<string, string | number> = {};
+    if (options?.page) searchParams.page = options.page;
+    if (options?.region) searchParams.region = options.region;
+
+    return kyClient
+      .get("movie/now_playing", { searchParams })
+      .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
+  };
+
+  const getUpcomingMovies = async (
+    options?: { page?: number; region?: string }
+  ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
+    const searchParams: Record<string, string | number> = {};
+    if (options?.page) searchParams.page = options.page;
+    if (options?.region) searchParams.region = options.region;
+
+    return kyClient
+      .get("movie/upcoming", { searchParams })
+      .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
+  };
+
+  const getAiringTodayTv = async (
+    options?: { page?: number }
+  ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
+    const searchParams: Record<string, string | number> = {};
+    if (options?.page) searchParams.page = options.page;
+
+    return kyClient
+      .get("tv/airing_today", { searchParams })
+      .json<TmdbSearchResponse<TmdbTvSearchResult>>();
+  };
+
+  const getOnTheAirTv = async (
+    options?: { page?: number }
+  ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
+    const searchParams: Record<string, string | number> = {};
+    if (options?.page) searchParams.page = options.page;
+
+    return kyClient
+      .get("tv/on_the_air", { searchParams })
+      .json<TmdbSearchResponse<TmdbTvSearchResult>>();
+  };
+
+  const getMovieReviews = async (
+    movieId: number,
+    options?: { page?: number }
+  ): Promise<TmdbReviewsResponse> => {
+    const searchParams: Record<string, string | number> = {};
+    if (options?.page) searchParams.page = options.page;
+
+    return kyClient
+      .get(`movie/${movieId}/reviews`, { searchParams })
+      .json<TmdbReviewsResponse>();
+  };
+
+  const getTvReviews = async (
+    tvId: number,
+    options?: { page?: number }
+  ): Promise<TmdbReviewsResponse> => {
+    const searchParams: Record<string, string | number> = {};
+    if (options?.page) searchParams.page = options.page;
+
+    return kyClient
+      .get(`tv/${tvId}/reviews`, { searchParams })
+      .json<TmdbReviewsResponse>();
+  };
+
   return {
     searchMovies,
     searchPerson,
@@ -268,6 +391,7 @@ export const createTmdbClient = (apiKey: string) => {
     getMovieCredits,
     getWatchProviders,
     discoverMovies,
+    discoverTv,
     getMovieGenres,
     getTvGenres,
     getTrending,
@@ -278,6 +402,15 @@ export const createTmdbClient = (apiKey: string) => {
     getTvRecommendations,
     getSimilarTv,
     getCollection,
+    multiSearch,
+    getMovieVideos,
+    getTvVideos,
+    getNowPlayingMovies,
+    getUpcomingMovies,
+    getAiringTodayTv,
+    getOnTheAirTv,
+    getMovieReviews,
+    getTvReviews,
     getImageUrl,
   };
 };
