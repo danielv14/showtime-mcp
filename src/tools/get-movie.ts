@@ -2,11 +2,8 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { OmdbClient } from "../omdb-api/index.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  requireAtLeastOne,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { requireAtLeastOne } from "./helpers/resolvers.js";
 
 export const registerGetMovieTool = (
   server: McpServer,

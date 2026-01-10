@@ -1,13 +1,10 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  extractYear,
-  truncateText,
-  requireAtLeastOne,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { formatTmdbTvResult } from "./helpers/formatters.js";
+import { capTotalPages } from "./helpers/constants.js";
+import { requireAtLeastOne, resolveTvId } from "./helpers/resolvers.js";
 
 export const registerGetTvRecommendationsTool = (
   server: McpServer,
@@ -43,47 +40,22 @@ export const registerGetTvRecommendationsTool = (
         );
         if (validationError) return validationError;
 
-        let tvId: number | undefined = tmdbId;
-        let sourceShowTitle: string | undefined;
+        const resolved = await resolveTvId(
+          tmdbClient,
+          "getting TV recommendations",
+          { tmdbId, title }
+        );
+        if (!resolved.success) return resolved.error;
 
-        if (!tvId && title) {
-          const searchResult = await tmdbClient.searchTv(title);
-          const firstResult = searchResult.results[0];
-          if (!firstResult) {
-            return createErrorResponse(
-              "getting TV recommendations",
-              new Error(`No TV series found matching title: ${title}`)
-            );
-          }
-          tvId = firstResult.id;
-          sourceShowTitle = firstResult.name;
-        }
-
-        if (!tvId) {
-          return createErrorResponse(
-            "getting TV recommendations",
-            new Error("Could not determine TV series ID")
-          );
-        }
-
-        if (!sourceShowTitle) {
-          const tvDetails = await tmdbClient.getTvDetails(tvId);
-          sourceShowTitle = tvDetails.name;
-        }
+        const { id: tvId, name: sourceShowTitle } = resolved.tv;
 
         const result = await tmdbClient.getTvRecommendations(tvId, { page });
 
-        const formattedResults = result.results.map((show) => ({
-          tmdbId: show.id,
-          title: show.name,
-          originalTitle: show.original_name,
-          year: extractYear(show.first_air_date),
-          firstAirDate: show.first_air_date || "N/A",
-          overview: truncateText(show.overview || "", 200),
-          tmdbRating: show.vote_average,
-          voteCount: show.vote_count,
-          posterUrl: tmdbClient.getImageUrl(show.poster_path, "w342"),
-        }));
+        const formattedResults = result.results.map((show) =>
+          formatTmdbTvResult(show, tmdbClient.getImageUrl, {
+            includeVoteCount: true,
+          })
+        );
 
         return createSuccessResponse({
           sourceShow: {
@@ -93,7 +65,7 @@ export const registerGetTvRecommendationsTool = (
           recommendations: formattedResults,
           totalResults: result.total_results,
           page: result.page,
-          totalPages: Math.min(result.total_pages, 500),
+          totalPages: capTotalPages(result.total_pages),
         });
       } catch (error) {
         return createErrorResponse("getting TV recommendations", error);

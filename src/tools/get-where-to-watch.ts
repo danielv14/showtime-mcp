@@ -1,11 +1,8 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  requireAtLeastOne,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { requireAtLeastOne, resolveMovieId } from "./helpers/resolvers.js";
 
 export const registerGetWhereToWatchTool = (
   server: McpServer,
@@ -45,36 +42,14 @@ export const registerGetWhereToWatchTool = (
         });
         if (validationError) return validationError;
 
-        let movieId: number | undefined = tmdbId;
-        let movieTitle: string | undefined;
+        const resolved = await resolveMovieId(
+          tmdbClient,
+          "getting watch providers",
+          { tmdbId, imdbId, title }
+        );
+        if (!resolved.success) return resolved.error;
 
-        if (!movieId) {
-          if (imdbId) {
-            const movie = await tmdbClient.getMovieByImdbId(imdbId);
-            if (!movie) {
-              return createErrorResponse("getting watch providers", new Error(`Movie not found for IMDb ID: ${imdbId}`));
-            }
-            movieId = movie.id;
-            movieTitle = movie.title;
-          } else if (title) {
-            const searchResult = await tmdbClient.searchMovies(title);
-            const firstResult = searchResult.results[0];
-            if (!firstResult) {
-              return createErrorResponse("getting watch providers", new Error(`No movies found matching title: ${title}`));
-            }
-            movieId = firstResult.id;
-            movieTitle = firstResult.title;
-          }
-        }
-
-        if (!movieId) {
-          return createErrorResponse("getting watch providers", new Error("Could not determine movie ID"));
-        }
-
-        if (!movieTitle) {
-          const movieDetails = await tmdbClient.getMovieDetails(movieId);
-          movieTitle = movieDetails.title;
-        }
+        const { id: movieId, title: movieTitle } = resolved.movie;
 
         const watchProviders = await tmdbClient.getWatchProviders(movieId);
         const regionData = watchProviders.results[region.toUpperCase()];

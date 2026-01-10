@@ -1,11 +1,8 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient, TmdbVideo } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  requireAtLeastOne,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { requireAtLeastOne } from "./helpers/resolvers.js";
 
 const formatVideo = (video: TmdbVideo) => {
   const videoUrl =

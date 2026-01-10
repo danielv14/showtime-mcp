@@ -1,12 +1,9 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  extractYear,
-  truncateText,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { extractYear, truncateText } from "./helpers/formatters.js";
+import { capTotalPages } from "./helpers/constants.js";
 
 export const registerGetTrendingTool = (
   server: McpServer,
@@ -64,7 +61,7 @@ export const registerGetTrendingTool = (
           results: formattedResults,
           totalResults: result.total_results,
           page: result.page,
-          totalPages: Math.min(result.total_pages, 500),
+          totalPages: capTotalPages(result.total_pages),
           filters: {
             mediaType,
             timeWindow,

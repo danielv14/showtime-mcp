@@ -1,13 +1,9 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  extractYear,
-  truncateText,
-  requireAtLeastOne,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { extractYear, truncateText } from "./helpers/formatters.js";
+import { requireAtLeastOne, resolveMovieId } from "./helpers/resolvers.js";
 
 export const registerGetCollectionTool = (
   server: McpServer,
@@ -50,28 +46,14 @@ export const registerGetCollectionTool = (
         let finalCollectionId: number | undefined = collectionId;
 
         if (!finalCollectionId) {
-          let movieId: number | undefined = movieTmdbId;
+          const resolved = await resolveMovieId(
+            tmdbClient,
+            "getting collection",
+            { tmdbId: movieTmdbId, title: movieTitle }
+          );
+          if (!resolved.success) return resolved.error;
 
-          if (!movieId && movieTitle) {
-            const searchResult = await tmdbClient.searchMovies(movieTitle);
-            const firstResult = searchResult.results[0];
-            if (!firstResult) {
-              return createErrorResponse(
-                "getting collection",
-                new Error(`No movies found matching title: ${movieTitle}`)
-              );
-            }
-            movieId = firstResult.id;
-          }
-
-          if (!movieId) {
-            return createErrorResponse(
-              "getting collection",
-              new Error("Could not determine movie ID")
-            );
-          }
-
-          const movieDetails = await tmdbClient.getMovieDetails(movieId);
+          const movieDetails = await tmdbClient.getMovieDetails(resolved.movie.id);
           if (!movieDetails.belongs_to_collection) {
             return createErrorResponse(
               "getting collection",

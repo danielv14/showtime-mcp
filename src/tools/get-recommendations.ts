@@ -1,12 +1,10 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  formatTmdbMovieResult,
-  requireAtLeastOne,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { formatTmdbMovieResult } from "./helpers/formatters.js";
+import { capTotalPages } from "./helpers/constants.js";
+import { requireAtLeastOne, resolveMovieId } from "./helpers/resolvers.js";
 
 export const registerGetRecommendationsTool = (
   server: McpServer,
@@ -42,33 +40,14 @@ export const registerGetRecommendationsTool = (
         );
         if (validationError) return validationError;
 
-        let movieId: number | undefined = tmdbId;
-        let sourceMovieTitle: string | undefined;
+        const resolved = await resolveMovieId(
+          tmdbClient,
+          "getting movie recommendations",
+          { tmdbId, title }
+        );
+        if (!resolved.success) return resolved.error;
 
-        if (!movieId && title) {
-          const searchResult = await tmdbClient.searchMovies(title);
-          const firstResult = searchResult.results[0];
-          if (!firstResult) {
-            return createErrorResponse(
-              "getting movie recommendations",
-              new Error(`No movies found matching title: ${title}`)
-            );
-          }
-          movieId = firstResult.id;
-          sourceMovieTitle = firstResult.title;
-        }
-
-        if (!movieId) {
-          return createErrorResponse(
-            "getting movie recommendations",
-            new Error("Could not determine movie ID")
-          );
-        }
-
-        if (!sourceMovieTitle) {
-          const movieDetails = await tmdbClient.getMovieDetails(movieId);
-          sourceMovieTitle = movieDetails.title;
-        }
+        const { id: movieId, title: sourceMovieTitle } = resolved.movie;
 
         const result = await tmdbClient.getMovieRecommendations(movieId, {
           page,
@@ -88,7 +67,7 @@ export const registerGetRecommendationsTool = (
           recommendations: formattedResults,
           totalResults: result.total_results,
           page: result.page,
-          totalPages: Math.min(result.total_pages, 500),
+          totalPages: capTotalPages(result.total_pages),
         });
       } catch (error) {
         return createErrorResponse("getting movie recommendations", error);

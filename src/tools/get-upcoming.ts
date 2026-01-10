@@ -1,11 +1,9 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  formatTmdbMovieResult,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { formatTmdbMovieResult } from "./helpers/formatters.js";
+import { capTotalPages } from "./helpers/constants.js";
 
 export const registerGetUpcomingTool = (
   server: McpServer,
@@ -45,7 +43,7 @@ export const registerGetUpcomingTool = (
           results: formattedResults,
           totalResults: result.total_results,
           page: result.page,
-          totalPages: Math.min(result.total_pages, 500),
+          totalPages: capTotalPages(result.total_pages),
           region,
         });
       } catch (error) {

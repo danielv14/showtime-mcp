@@ -26,7 +26,11 @@ src/
 │   └── client.ts         # TMDB API wrapper using ky
 └── tools/                # MCP tool implementations
     ├── index.ts          # Registers all tools
-    ├── helpers.ts        # Shared helper functions and constants
+    ├── helpers/          # Shared helper functions
+    │   ├── response.ts   # MCP response formatting
+    │   ├── formatters.ts # TMDB/OMDB result formatting
+    │   ├── constants.ts  # Pagination limits and genre maps
+    │   └── resolvers.ts  # Movie/TV ID resolution logic
     │
     │   # TMDB-powered tools
     ├── search-movies.ts      # Search movies by title (TMDB)
@@ -90,19 +94,31 @@ src/
 | Now Playing/Upcoming | No | Yes | TMDB |
 | Similar content | No | Yes (genre-based) | TMDB |
 
-## Helper Functions
+## Helper Modules
 
-The `helpers.ts` module provides shared utilities:
+The `helpers/` directory contains shared utilities split by concern:
 
+### response.ts
 - `createSuccessResponse(data)` - Format successful tool responses
 - `createErrorResponse(context, error)` - Format error responses
+
+### formatters.ts
 - `truncateText(text, maxLength)` - Truncate text with ellipsis
 - `extractYear(releaseDate)` - Extract year from ISO date string
-- `requireAtLeastOne(context, fields)` - Validate at least one field is provided
 - `formatTmdbMovieResult(movie, getImageUrl, options)` - Format TMDB movie search results
+- `formatTmdbTvResult(show, getImageUrl, options)` - Format TMDB TV search results
 - `formatOmdbEpisode(episode)` - Format OMDB episode data
+
+### constants.ts
+- `TMDB_MAX_PAGES` - TMDB pagination limit (500)
+- `capTotalPages(totalPages)` - Cap pagination to TMDB's max
 - `MOVIE_GENRE_MAP` / `TV_GENRE_MAP` - Genre name to TMDB ID mappings
 - `getGenreId(genreName, genreMap)` - Look up genre ID by name
+
+### resolvers.ts
+- `requireAtLeastOne(context, fields)` - Validate at least one field is provided
+- `resolveMovieId(tmdbClient, context, options)` - Resolve movie ID from tmdbId/imdbId/title
+- `resolveTvId(tmdbClient, context, options)` - Resolve TV series ID from tmdbId/title
 
 ## Development Notes
 

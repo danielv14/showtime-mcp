@@ -1,14 +1,9 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  truncateText,
-  extractYear,
-  TV_GENRE_MAP,
-  getGenreId,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { formatTmdbTvResult } from "./helpers/formatters.js";
+import { TV_GENRE_MAP, getGenreId, capTotalPages } from "./helpers/constants.js";
 
 export const registerDiscoverTvTool = (
   server: McpServer,
@@ -95,22 +90,17 @@ export const registerDiscoverTvTool = (
           with_original_language: language,
         });
 
-        const formattedResults = result.results.map((show) => ({
-          tmdbId: show.id,
-          name: show.name,
-          year: extractYear(show.first_air_date),
-          firstAirDate: show.first_air_date || "N/A",
-          overview: truncateText(show.overview || "", 200),
-          tmdbRating: show.vote_average,
-          voteCount: show.vote_count,
-          posterUrl: tmdbClient.getImageUrl(show.poster_path, "w342"),
-        }));
+        const formattedResults = result.results.map((show) =>
+          formatTmdbTvResult(show, tmdbClient.getImageUrl, {
+            includeVoteCount: true,
+          })
+        );
 
         return createSuccessResponse({
           results: formattedResults,
           totalResults: result.total_results,
           page: result.page,
-          totalPages: Math.min(result.total_pages, 500),
+          totalPages: capTotalPages(result.total_pages),
           filters: {
             year,
             genre,

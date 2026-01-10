@@ -1,13 +1,9 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  formatTmdbMovieResult,
-  MOVIE_GENRE_MAP,
-  getGenreId,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { formatTmdbMovieResult } from "./helpers/formatters.js";
+import { MOVIE_GENRE_MAP, getGenreId, capTotalPages } from "./helpers/constants.js";
 
 export const registerDiscoverMoviesTool = (
   server: McpServer,
@@ -127,7 +123,7 @@ export const registerDiscoverMoviesTool = (
           results: formattedResults,
           totalResults: result.total_results,
           page: result.page,
-          totalPages: Math.min(result.total_pages, 500),
+          totalPages: capTotalPages(result.total_pages),
           filters: {
             year,
             genre,

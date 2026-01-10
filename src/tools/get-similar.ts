@@ -1,14 +1,10 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  formatTmdbMovieResult,
-  truncateText,
-  extractYear,
-  requireAtLeastOne,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { formatTmdbMovieResult, formatTmdbTvResult } from "./helpers/formatters.js";
+import { capTotalPages } from "./helpers/constants.js";
+import { requireAtLeastOne } from "./helpers/resolvers.js";
 
 export const registerGetSimilarTool = (
   server: McpServer,
@@ -66,7 +62,7 @@ export const registerGetSimilarTool = (
             similar: formattedResults,
             totalResults: similarResult.total_results,
             page: similarResult.page,
-            totalPages: Math.min(similarResult.total_pages, 500),
+            totalPages: capTotalPages(similarResult.total_pages),
           });
         }
 
@@ -76,16 +72,11 @@ export const registerGetSimilarTool = (
           tmdbClient.getTvDetails(tvId!),
         ]);
 
-        const formattedResults = similarResult.results.map((show) => ({
-          tmdbId: show.id,
-          name: show.name,
-          year: extractYear(show.first_air_date),
-          firstAirDate: show.first_air_date || "N/A",
-          overview: truncateText(show.overview || "", 200),
-          tmdbRating: show.vote_average,
-          voteCount: show.vote_count,
-          posterUrl: tmdbClient.getImageUrl(show.poster_path, "w342"),
-        }));
+        const formattedResults = similarResult.results.map((show) =>
+          formatTmdbTvResult(show, tmdbClient.getImageUrl, {
+            includeVoteCount: true,
+          })
+        );
 
         return createSuccessResponse({
           mediaType: "tv",
@@ -97,7 +88,7 @@ export const registerGetSimilarTool = (
           similar: formattedResults,
           totalResults: similarResult.total_results,
           page: similarResult.page,
-          totalPages: Math.min(similarResult.total_pages, 500),
+          totalPages: capTotalPages(similarResult.total_pages),
         });
       } catch (error) {
         return createErrorResponse("getting similar content", error);
