@@ -5,9 +5,9 @@ import {
   createSuccessResponse,
   createErrorResponse,
   formatTmdbMovieResult,
-  truncateText,
-  extractYear,
+  formatTmdbTvResult,
   requireAtLeastOne,
+  capTotalPages,
 } from "./helpers.js";
 
 export const registerGetSimilarTool = (
@@ -66,7 +66,7 @@ export const registerGetSimilarTool = (
             similar: formattedResults,
             totalResults: similarResult.total_results,
             page: similarResult.page,
-            totalPages: Math.min(similarResult.total_pages, 500),
+            totalPages: capTotalPages(similarResult.total_pages),
           });
         }
 
@@ -76,16 +76,11 @@ export const registerGetSimilarTool = (
           tmdbClient.getTvDetails(tvId!),
         ]);
 
-        const formattedResults = similarResult.results.map((show) => ({
-          tmdbId: show.id,
-          name: show.name,
-          year: extractYear(show.first_air_date),
-          firstAirDate: show.first_air_date || "N/A",
-          overview: truncateText(show.overview || "", 200),
-          tmdbRating: show.vote_average,
-          voteCount: show.vote_count,
-          posterUrl: tmdbClient.getImageUrl(show.poster_path, "w342"),
-        }));
+        const formattedResults = similarResult.results.map((show) =>
+          formatTmdbTvResult(show, tmdbClient.getImageUrl, {
+            includeVoteCount: true,
+          })
+        );
 
         return createSuccessResponse({
           mediaType: "tv",
@@ -97,7 +92,7 @@ export const registerGetSimilarTool = (
           similar: formattedResults,
           totalResults: similarResult.total_results,
           page: similarResult.page,
-          totalPages: Math.min(similarResult.total_pages, 500),
+          totalPages: capTotalPages(similarResult.total_pages),
         });
       } catch (error) {
         return createErrorResponse("getting similar content", error);

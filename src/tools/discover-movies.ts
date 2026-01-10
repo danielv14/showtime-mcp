@@ -7,6 +7,7 @@ import {
   formatTmdbMovieResult,
   MOVIE_GENRE_MAP,
   getGenreId,
+  capTotalPages,
 } from "./helpers.js";
 
 export const registerDiscoverMoviesTool = (
@@ -127,7 +128,7 @@ export const registerDiscoverMoviesTool = (
           results: formattedResults,
           totalResults: result.total_results,
           page: result.page,
-          totalPages: Math.min(result.total_pages, 500),
+          totalPages: capTotalPages(result.total_pages),
           filters: {
             year,
             genre,

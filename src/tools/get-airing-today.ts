@@ -4,8 +4,8 @@ import type { TmdbClient } from "../tmdb-api/index.js";
 import {
   createSuccessResponse,
   createErrorResponse,
-  truncateText,
-  extractYear,
+  formatTmdbTvResult,
+  capTotalPages,
 } from "./helpers.js";
 
 export const registerGetAiringTodayTool = (
@@ -30,22 +30,17 @@ export const registerGetAiringTodayTool = (
       try {
         const result = await tmdbClient.getAiringTodayTv({ page });
 
-        const formattedResults = result.results.map((show) => ({
-          tmdbId: show.id,
-          name: show.name,
-          year: extractYear(show.first_air_date),
-          firstAirDate: show.first_air_date || "N/A",
-          overview: truncateText(show.overview || "", 200),
-          tmdbRating: show.vote_average,
-          voteCount: show.vote_count,
-          posterUrl: tmdbClient.getImageUrl(show.poster_path, "w342"),
-        }));
+        const formattedResults = result.results.map((show) =>
+          formatTmdbTvResult(show, tmdbClient.getImageUrl, {
+            includeVoteCount: true,
+          })
+        );
 
         return createSuccessResponse({
           results: formattedResults,
           totalResults: result.total_results,
           page: result.page,
-          totalPages: Math.min(result.total_pages, 500),
+          totalPages: capTotalPages(result.total_pages),
         });
       } catch (error) {
         return createErrorResponse("getting TV shows airing today", error);

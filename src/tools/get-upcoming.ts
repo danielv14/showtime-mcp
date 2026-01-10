@@ -5,6 +5,7 @@ import {
   createSuccessResponse,
   createErrorResponse,
   formatTmdbMovieResult,
+  capTotalPages,
 } from "./helpers.js";
 
 export const registerGetUpcomingTool = (
@@ -45,7 +46,7 @@ export const registerGetUpcomingTool = (
           results: formattedResults,
           totalResults: result.total_results,
           page: result.page,
-          totalPages: Math.min(result.total_pages, 500),
+          totalPages: capTotalPages(result.total_pages),
           region,
         });
       } catch (error) {

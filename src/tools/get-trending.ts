@@ -6,6 +6,7 @@ import {
   createErrorResponse,
   extractYear,
   truncateText,
+  capTotalPages,
 } from "./helpers.js";
 
 export const registerGetTrendingTool = (
@@ -64,7 +65,7 @@ export const registerGetTrendingTool = (
           results: formattedResults,
           totalResults: result.total_results,
           page: result.page,
-          totalPages: Math.min(result.total_pages, 500),
+          totalPages: capTotalPages(result.total_pages),
           filters: {
             mediaType,
             timeWindow,

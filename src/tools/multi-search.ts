@@ -6,6 +6,7 @@ import {
   createErrorResponse,
   truncateText,
   extractYear,
+  capTotalPages,
 } from "./helpers.js";
 
 const formatMultiSearchResult = (
@@ -93,7 +94,7 @@ export const registerMultiSearchTool = (
           },
           totalResults: result.total_results,
           page: result.page,
-          totalPages: Math.min(result.total_pages, 500),
+          totalPages: capTotalPages(result.total_pages),
         });
       } catch (error) {
         return createErrorResponse("performing multi search", error);

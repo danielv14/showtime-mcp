@@ -7,6 +7,7 @@ import {
   extractYear,
   truncateText,
   requireAtLeastOne,
+  resolveMovieId,
 } from "./helpers.js";
 
 export const registerGetCollectionTool = (
@@ -50,28 +51,14 @@ export const registerGetCollectionTool = (
         let finalCollectionId: number | undefined = collectionId;
 
         if (!finalCollectionId) {
-          let movieId: number | undefined = movieTmdbId;
+          const resolved = await resolveMovieId(
+            tmdbClient,
+            "getting collection",
+            { tmdbId: movieTmdbId, title: movieTitle }
+          );
+          if (!resolved.success) return resolved.error;
 
-          if (!movieId && movieTitle) {
-            const searchResult = await tmdbClient.searchMovies(movieTitle);
-            const firstResult = searchResult.results[0];
-            if (!firstResult) {
-              return createErrorResponse(
-                "getting collection",
-                new Error(`No movies found matching title: ${movieTitle}`)
-              );
-            }
-            movieId = firstResult.id;
-          }
-
-          if (!movieId) {
-            return createErrorResponse(
-              "getting collection",
-              new Error("Could not determine movie ID")
-            );
-          }
-
-          const movieDetails = await tmdbClient.getMovieDetails(movieId);
+          const movieDetails = await tmdbClient.getMovieDetails(resolved.movie.id);
           if (!movieDetails.belongs_to_collection) {
             return createErrorResponse(
               "getting collection",
