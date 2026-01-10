@@ -1,14 +1,9 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  formatTmdbTvResult,
-  TV_GENRE_MAP,
-  getGenreId,
-  capTotalPages,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { formatTmdbTvResult } from "./helpers/formatters.js";
+import { TV_GENRE_MAP, getGenreId, capTotalPages } from "./helpers/constants.js";
 
 export const registerDiscoverTvTool = (
   server: McpServer,

@@ -1,13 +1,9 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient, TmdbMultiSearchResult } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  truncateText,
-  extractYear,
-  capTotalPages,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { truncateText, extractYear } from "./helpers/formatters.js";
+import { capTotalPages } from "./helpers/constants.js";
 
 const formatMultiSearchResult = (
   result: TmdbMultiSearchResult,

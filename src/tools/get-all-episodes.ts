@@ -1,11 +1,8 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { OmdbClient } from "../omdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  formatOmdbEpisode,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { formatOmdbEpisode } from "./helpers/formatters.js";
 
 export const registerGetAllEpisodesTool = (
   server: McpServer,

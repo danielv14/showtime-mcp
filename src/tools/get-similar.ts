@@ -1,14 +1,10 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  formatTmdbMovieResult,
-  formatTmdbTvResult,
-  requireAtLeastOne,
-  capTotalPages,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { formatTmdbMovieResult, formatTmdbTvResult } from "./helpers/formatters.js";
+import { capTotalPages } from "./helpers/constants.js";
+import { requireAtLeastOne } from "./helpers/resolvers.js";
 
 export const registerGetSimilarTool = (
   server: McpServer,

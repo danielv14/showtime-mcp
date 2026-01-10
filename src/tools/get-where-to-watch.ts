@@ -1,12 +1,8 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  requireAtLeastOne,
-  resolveMovieId,
-} from "./helpers.js";
+import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { requireAtLeastOne, resolveMovieId } from "./helpers/resolvers.js";
 
 export const registerGetWhereToWatchTool = (
   server: McpServer,
