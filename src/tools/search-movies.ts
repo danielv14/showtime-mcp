@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { createPaginatedResponse, createErrorResponse } from "./helpers/response.js";
 import { formatTmdbMovieResult } from "./helpers/formatters.js";
 
 export const registerSearchMoviesTool = (
@@ -35,11 +35,8 @@ export const registerSearchMoviesTool = (
           formatTmdbMovieResult(movie, tmdbClient.getImageUrl)
         );
 
-        return createSuccessResponse({
+        return createPaginatedResponse(result, {
           results: formattedResults,
-          totalResults: result.total_results,
-          page: result.page,
-          totalPages: result.total_pages,
         });
       } catch (error) {
         return createErrorResponse("searching movies", error);

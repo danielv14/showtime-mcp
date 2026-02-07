@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient, TmdbMovieCredit } from "../tmdb-api/index.js";
 import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { extractYear } from "./helpers/formatters.js";
+import { NA } from "./helpers/constants.js";
 
 export const registerGetFilmographyTool = (
   server: McpServer,
@@ -25,6 +27,14 @@ export const registerGetFilmographyTool = (
           .enum(["date", "rating", "title"])
           .optional()
           .describe("Sort by: 'date' (newest first), 'rating' (highest first), or 'title' (alphabetical)"),
+        minYear: z
+          .number()
+          .optional()
+          .describe("Filter to only include movies from this year or later (e.g., 2000)"),
+        maxYear: z
+          .number()
+          .optional()
+          .describe("Filter to only include movies up to this year (e.g., 2020)"),
         limit: z
           .number()
           .min(1)
@@ -33,7 +43,7 @@ export const registerGetFilmographyTool = (
           .describe("Maximum number of movies to return (default: 50)"),
       },
     },
-    async ({ personId, role = "all", sortBy = "date", limit = 50 }) => {
+    async ({ personId, role = "all", sortBy = "date", minYear, maxYear, limit = 50 }) => {
       try {
         const [personDetails, movieCredits] = await Promise.all([
           tmdbClient.getPersonDetails(personId),
@@ -103,7 +113,7 @@ export const registerGetFilmographyTool = (
           const existing = uniqueCreditsMap.get(credit.id);
           const roleStr =
             credit.creditType === "cast"
-              ? `Actor (${credit.character || "N/A"})`
+              ? `Actor (${credit.character || NA})`
               : credit.job || "Unknown";
 
           if (existing) {
@@ -119,6 +129,16 @@ export const registerGetFilmographyTool = (
         }
 
         let sortedCredits = Array.from(uniqueCreditsMap.values());
+
+        if (minYear || maxYear) {
+          sortedCredits = sortedCredits.filter((credit) => {
+            const year = parseInt(credit.release_date?.split("-")[0] || "0", 10);
+            if (!year) return false;
+            if (minYear && year < minYear) return false;
+            if (maxYear && year > maxYear) return false;
+            return true;
+          });
+        }
 
         switch (sortBy) {
           case "date":
@@ -141,7 +161,7 @@ export const registerGetFilmographyTool = (
         const formattedCredits = sortedCredits.map((credit) => ({
           tmdbId: credit.id,
           title: credit.title,
-          year: credit.release_date?.split("-")[0] || "N/A",
+          year: extractYear(credit.release_date),
           roles: credit.roles,
           tmdbRating: credit.vote_average,
           voteCount: credit.vote_count,
@@ -171,6 +191,8 @@ export const registerGetFilmographyTool = (
           filters: {
             role,
             sortBy,
+            minYear,
+            maxYear,
             limit,
           },
         });

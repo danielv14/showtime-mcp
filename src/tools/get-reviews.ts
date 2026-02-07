@@ -1,19 +1,9 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { TmdbClient, TmdbReview } from "../tmdb-api/index.js";
+import type { TmdbClient } from "../tmdb-api/index.js";
 import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
-import { truncateText } from "./helpers/formatters.js";
+import { formatReview } from "./helpers/formatters.js";
 import { requireAtLeastOne } from "./helpers/resolvers.js";
-
-const formatReview = (review: TmdbReview) => ({
-  id: review.id,
-  author: review.author,
-  username: review.author_details.username,
-  rating: review.author_details.rating,
-  content: truncateText(review.content, 1000),
-  createdAt: review.created_at,
-  url: review.url,
-});
 
 export const registerGetReviewsTool = (
   server: McpServer,

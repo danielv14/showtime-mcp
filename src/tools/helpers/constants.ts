@@ -1,5 +1,11 @@
+/** Placeholder for unavailable data */
+export const NA = "N/A";
+
 /** TMDB caps pagination at 500 pages regardless of total_pages returned */
 export const TMDB_MAX_PAGES = 500;
+
+/** OMDB returns 10 results per page */
+export const OMDB_RESULTS_PER_PAGE = 10;
 
 /** Cap total pages to TMDB's maximum allowed value */
 export const capTotalPages = (totalPages: number): number =>

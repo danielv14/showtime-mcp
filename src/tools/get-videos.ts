@@ -2,28 +2,8 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient, TmdbVideo } from "../tmdb-api/index.js";
 import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { formatVideo } from "./helpers/formatters.js";
 import { requireAtLeastOne } from "./helpers/resolvers.js";
-
-const formatVideo = (video: TmdbVideo) => {
-  const videoUrl =
-    video.site === "YouTube"
-      ? `https://www.youtube.com/watch?v=${video.key}`
-      : video.site === "Vimeo"
-        ? `https://vimeo.com/${video.key}`
-        : null;
-
-  return {
-    id: video.id,
-    name: video.name,
-    type: video.type,
-    site: video.site,
-    key: video.key,
-    url: videoUrl,
-    size: video.size,
-    official: video.official,
-    publishedAt: video.published_at,
-  };
-};
 
 export const registerGetVideosTool = (
   server: McpServer,
