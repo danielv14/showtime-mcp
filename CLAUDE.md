@@ -101,6 +101,7 @@ The `helpers/` directory contains shared utilities split by concern:
 ### response.ts
 - `createSuccessResponse(data)` - Format successful tool responses
 - `createErrorResponse(context, error)` - Format error responses
+- `createPaginatedResponse(apiResponse, data)` - Format paginated responses with totalResults/page/totalPages
 
 ### formatters.ts
 - `truncateText(text, maxLength)` - Truncate text with ellipsis
@@ -108,9 +109,15 @@ The `helpers/` directory contains shared utilities split by concern:
 - `formatTmdbMovieResult(movie, getImageUrl, options)` - Format TMDB movie search results
 - `formatTmdbTvResult(show, getImageUrl, options)` - Format TMDB TV search results
 - `formatOmdbEpisode(episode)` - Format OMDB episode data
+- `formatReview(review)` - Format TMDB review data
+- `formatVideo(video)` - Format TMDB video data with YouTube/Vimeo URLs
+- `filterCrewByJob(crew, jobs)` - Filter crew members by job titles
+- `filterCrewByDepartment(crew, department)` - Filter crew members by department
 
 ### constants.ts
+- `NA` - Placeholder constant for unavailable data (`"N/A"`)
 - `TMDB_MAX_PAGES` - TMDB pagination limit (500)
+- `OMDB_RESULTS_PER_PAGE` - OMDB results per page (10)
 - `capTotalPages(totalPages)` - Cap pagination to TMDB's max
 - `MOVIE_GENRE_MAP` / `TV_GENRE_MAP` - Genre name to TMDB ID mappings
 - `getGenreId(genreName, genreMap)` - Look up genre ID by name
