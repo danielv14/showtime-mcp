@@ -1,9 +1,8 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { createPaginatedResponse, createErrorResponse } from "./helpers/response.js";
 import { formatTmdbMovieResult, formatTmdbTvResult } from "./helpers/formatters.js";
-import { capTotalPages } from "./helpers/constants.js";
 import { requireAtLeastOne } from "./helpers/resolvers.js";
 
 export const registerGetSimilarTool = (
@@ -52,7 +51,7 @@ export const registerGetSimilarTool = (
             })
           );
 
-          return createSuccessResponse({
+          return createPaginatedResponse(similarResult, {
             mediaType: "movie",
             basedOn: {
               tmdbId: movieDetails.id,
@@ -60,9 +59,6 @@ export const registerGetSimilarTool = (
               genres: movieDetails.genres.map((g) => g.name),
             },
             similar: formattedResults,
-            totalResults: similarResult.total_results,
-            page: similarResult.page,
-            totalPages: capTotalPages(similarResult.total_pages),
           });
         }
 
@@ -78,7 +74,7 @@ export const registerGetSimilarTool = (
           })
         );
 
-        return createSuccessResponse({
+        return createPaginatedResponse(similarResult, {
           mediaType: "tv",
           basedOn: {
             tmdbId: tvDetails.id,
@@ -86,9 +82,6 @@ export const registerGetSimilarTool = (
             genres: tvDetails.genres.map((g) => g.name),
           },
           similar: formattedResults,
-          totalResults: similarResult.total_results,
-          page: similarResult.page,
-          totalPages: capTotalPages(similarResult.total_pages),
         });
       } catch (error) {
         return createErrorResponse("getting similar content", error);

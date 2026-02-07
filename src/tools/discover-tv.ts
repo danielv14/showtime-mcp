@@ -1,9 +1,9 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { createPaginatedResponse, createErrorResponse } from "./helpers/response.js";
 import { formatTmdbTvResult } from "./helpers/formatters.js";
-import { TV_GENRE_MAP, getGenreId, capTotalPages } from "./helpers/constants.js";
+import { TV_GENRE_MAP, getGenreId } from "./helpers/constants.js";
 
 export const registerDiscoverTvTool = (
   server: McpServer,
@@ -96,11 +96,8 @@ export const registerDiscoverTvTool = (
           })
         );
 
-        return createSuccessResponse({
+        return createPaginatedResponse(result, {
           results: formattedResults,
-          totalResults: result.total_results,
-          page: result.page,
-          totalPages: capTotalPages(result.total_pages),
           filters: {
             year,
             genre,

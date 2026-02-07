@@ -1,9 +1,9 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient, TmdbMultiSearchResult } from "../tmdb-api/index.js";
-import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { createPaginatedResponse, createErrorResponse } from "./helpers/response.js";
 import { truncateText, extractYear } from "./helpers/formatters.js";
-import { capTotalPages } from "./helpers/constants.js";
+import { NA } from "./helpers/constants.js";
 
 const formatMultiSearchResult = (
   result: TmdbMultiSearchResult,
@@ -19,7 +19,7 @@ const formatMultiSearchResult = (
       ...base,
       title: result.title,
       year: extractYear(result.release_date),
-      releaseDate: result.release_date || "N/A",
+      releaseDate: result.release_date || NA,
       overview: truncateText(result.overview || "", 200),
       tmdbRating: result.vote_average,
       posterUrl: getImageUrl(result.poster_path ?? null, "w342"),
@@ -31,7 +31,7 @@ const formatMultiSearchResult = (
       ...base,
       name: result.name,
       year: extractYear(result.first_air_date),
-      firstAirDate: result.first_air_date || "N/A",
+      firstAirDate: result.first_air_date || NA,
       overview: truncateText(result.overview || "", 200),
       tmdbRating: result.vote_average,
       posterUrl: getImageUrl(result.poster_path ?? null, "w342"),
@@ -80,7 +80,7 @@ export const registerMultiSearchTool = (
         const tvShows = formattedResults.filter((r) => r.mediaType === "tv");
         const people = formattedResults.filter((r) => r.mediaType === "person");
 
-        return createSuccessResponse({
+        return createPaginatedResponse(result, {
           query,
           results: formattedResults,
           byType: {
@@ -88,9 +88,6 @@ export const registerMultiSearchTool = (
             tvShows: tvShows.length > 0 ? tvShows : undefined,
             people: people.length > 0 ? people : undefined,
           },
-          totalResults: result.total_results,
-          page: result.page,
-          totalPages: capTotalPages(result.total_pages),
         });
       } catch (error) {
         return createErrorResponse("performing multi search", error);

@@ -1,9 +1,8 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { createPaginatedResponse, createErrorResponse } from "./helpers/response.js";
 import { formatTmdbMovieResult } from "./helpers/formatters.js";
-import { capTotalPages } from "./helpers/constants.js";
 import { requireAtLeastOne, resolveMovieId } from "./helpers/resolvers.js";
 
 export const registerGetRecommendationsTool = (
@@ -59,15 +58,12 @@ export const registerGetRecommendationsTool = (
           })
         );
 
-        return createSuccessResponse({
+        return createPaginatedResponse(result, {
           sourceMovie: {
             tmdbId: movieId,
             title: sourceMovieTitle,
           },
           recommendations: formattedResults,
-          totalResults: result.total_results,
-          page: result.page,
-          totalPages: capTotalPages(result.total_pages),
         });
       } catch (error) {
         return createErrorResponse("getting movie recommendations", error);

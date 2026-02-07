@@ -3,6 +3,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { OmdbClient } from "../omdb-api/index.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
 import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { filterCrewByJob, filterCrewByDepartment } from "./helpers/formatters.js";
+import { NA } from "./helpers/constants.js";
 import { requireAtLeastOne } from "./helpers/resolvers.js";
 
 export const registerGetMovieTool = (
@@ -152,7 +154,7 @@ export const registerGetMovieTool = (
           // Images (TMDB - higher quality)
           posterUrl: tmdbDetails
             ? tmdbClient.getImageUrl(tmdbDetails.poster_path, "w500")
-            : omdbResult.Poster !== "N/A"
+            : omdbResult.Poster !== NA
               ? omdbResult.Poster
               : null,
           backdropUrl: tmdbDetails
@@ -176,21 +178,15 @@ export const registerGetMovieTool = (
             profileImageUrl: tmdbClient.getImageUrl(member.profile_path, "w185"),
           }));
 
-          const directors = tmdbCredits.crew.filter(
-            (member) => member.job === "Director"
+          const directors = filterCrewByJob(tmdbCredits.crew, ["Director"]);
+          const writers = [
+            ...filterCrewByJob(tmdbCredits.crew, ["Screenplay", "Writer"]),
+            ...filterCrewByDepartment(tmdbCredits.crew, "Writing"),
+          ].filter((member, index, self) =>
+            self.findIndex((m) => m.id === member.id) === index
           );
-          const writers = tmdbCredits.crew.filter(
-            (member) =>
-              member.department === "Writing" ||
-              member.job === "Screenplay" ||
-              member.job === "Writer"
-          );
-          const composers = tmdbCredits.crew.filter(
-            (member) => member.job === "Original Music Composer"
-          );
-          const cinematographers = tmdbCredits.crew.filter(
-            (member) => member.job === "Director of Photography"
-          );
+          const composers = filterCrewByJob(tmdbCredits.crew, ["Original Music Composer"]);
+          const cinematographers = filterCrewByJob(tmdbCredits.crew, ["Director of Photography"]);
 
           output.crew = {
             directors: directors.map((d) => ({

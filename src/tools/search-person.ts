@@ -1,7 +1,8 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
-import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
+import { createPaginatedResponse, createErrorResponse } from "./helpers/response.js";
+import { extractYear } from "./helpers/formatters.js";
 
 export const registerSearchPersonTool = (
   server: McpServer,
@@ -33,16 +34,13 @@ export const registerSearchPersonTool = (
           profileImageUrl: tmdbClient.getImageUrl(person.profile_path, "w185"),
           knownFor: person.known_for.slice(0, 3).map((movie) => ({
             title: movie.title,
-            year: movie.release_date?.split("-")[0] || "N/A",
+            year: extractYear(movie.release_date),
             tmdbId: movie.id,
           })),
         }));
 
-        return createSuccessResponse({
+        return createPaginatedResponse(result, {
           results: formattedResults,
-          totalResults: result.total_results,
-          page: result.page,
-          totalPages: result.total_pages,
         });
       } catch (error) {
         return createErrorResponse("searching person", error);

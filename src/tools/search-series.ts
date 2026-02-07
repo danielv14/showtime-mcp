@@ -2,8 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { OmdbClient } from "../omdb-api/index.js";
 import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
-
-const OMDB_RESULTS_PER_PAGE = 10;
+import { OMDB_RESULTS_PER_PAGE } from "./helpers/constants.js";
 
 export const registerSearchSeriesTool = (
   server: McpServer,
