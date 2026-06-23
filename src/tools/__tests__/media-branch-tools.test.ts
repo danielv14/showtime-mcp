@@ -125,6 +125,33 @@ describe("get_where_to_watch", () => {
     ]);
   });
 
+  it("resolves a tv series and queries the tv providers endpoint", async () => {
+    const result = (await getWhereToWatchTool.handler(
+      { mediaType: "tv", tmdbId: 2 },
+      tmdb({
+        getTvDetails: async () => ({ id: 2, name: "Severance" }) as never,
+        getTvWatchProviders: async () =>
+          ({
+            results: {
+              US: {
+                link: "http://jw-tv",
+                flatrate: [{ provider_name: "Apple TV+", logo_path: "/a.jpg" }],
+              },
+            },
+          }) as never,
+      })
+    )) as {
+      mediaType: string;
+      mediaTitle: string;
+      streaming: Array<{ name: string; logoUrl: string | null }>;
+    };
+    expect(result.mediaType).toBe("tv");
+    expect(result.mediaTitle).toBe("Severance");
+    expect(result.streaming).toEqual([
+      { name: "Apple TV+", logoUrl: "https://image.tmdb.org/t/p/w92/a.jpg" },
+    ]);
+  });
+
   it("reports no options when the region is absent", async () => {
     const result = (await getWhereToWatchTool.handler(
       { tmdbId: 1, region: "JP" },
@@ -143,9 +170,9 @@ describe("get_where_to_watch", () => {
     ).rejects.toThrow(/only supported for movies/);
   });
 
-  it("throws the guard error when no identifier is given", async () => {
-    await expect(getWhereToWatchTool.handler({}, tmdb({}))).rejects.toBeInstanceOf(
-      ToolResponseError
+  it("throws the at-least-one guard error when no identifier is given", async () => {
+    await expect(getWhereToWatchTool.handler({}, tmdb({}))).rejects.toThrow(
+      /At least one of/
     );
   });
 });

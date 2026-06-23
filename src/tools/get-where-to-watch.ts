@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { defineTool, failWith } from "./define-tool.js";
-import { requireAtLeastOne, resolveMovieId, resolveTvId } from "./helpers/resolvers.js";
+import { defineTool } from "./define-tool.js";
+import { resolveMedia } from "./helpers/resolvers.js";
 
 export const getWhereToWatchTool = defineTool({
   name: "get_where_to_watch",
@@ -37,55 +37,27 @@ export const getWhereToWatchTool = defineTool({
   },
   handler: async (
     { mediaType = "movie", title, tmdbId, imdbId, region = "US" },
-    { tmdb }
+    clients
   ) => {
-    const guardError = requireAtLeastOne("getting watch providers", {
-      title,
+    const media = await resolveMedia(clients, {
+      mediaType,
       tmdbId,
       imdbId,
+      title,
     });
-    if (guardError) return failWith(guardError);
 
-    let mediaId: number;
-    let mediaTitle: string;
-    let watchProviders;
-
-    if (mediaType === "tv") {
-      if (imdbId && !tmdbId && !title) {
-        throw new Error(
-          "IMDb ID lookup is only supported for movies. For TV series, provide a tmdbId or title."
-        );
-      }
-
-      const resolved = await resolveTvId(tmdb, "getting watch providers", {
-        tmdbId,
-        title,
-      });
-      if (!resolved.success) return failWith(resolved.error);
-
-      mediaId = resolved.tv.id;
-      mediaTitle = resolved.tv.name;
-      watchProviders = await tmdb.getTvWatchProviders(mediaId);
-    } else {
-      const resolved = await resolveMovieId(tmdb, "getting watch providers", {
-        tmdbId,
-        imdbId,
-        title,
-      });
-      if (!resolved.success) return failWith(resolved.error);
-
-      mediaId = resolved.movie.id;
-      mediaTitle = resolved.movie.title;
-      watchProviders = await tmdb.getWatchProviders(mediaId);
-    }
+    const watchProviders =
+      media.type === "tv"
+        ? await clients.tmdb.getTvWatchProviders(media.id)
+        : await clients.tmdb.getWatchProviders(media.id);
 
     const regionData = watchProviders.results[region.toUpperCase()];
 
     if (!regionData) {
       return {
-        mediaType,
-        mediaTitle,
-        tmdbId: mediaId,
+        mediaType: media.type,
+        mediaTitle: media.name,
+        tmdbId: media.id,
         region: region.toUpperCase(),
         message: `No streaming/rental/purchase options available in ${region.toUpperCase()}`,
         availableRegions: Object.keys(watchProviders.results).slice(0, 20),
@@ -98,14 +70,14 @@ export const getWhereToWatchTool = defineTool({
       if (!providers || providers.length === 0) return [];
       return providers.map((provider) => ({
         name: provider.provider_name,
-        logoUrl: tmdb.getImageUrl(provider.logo_path, "w92"),
+        logoUrl: clients.tmdb.getImageUrl(provider.logo_path, "w92"),
       }));
     };
 
     return {
-      mediaType,
-      mediaTitle,
-      tmdbId: mediaId,
+      mediaType: media.type,
+      mediaTitle: media.name,
+      tmdbId: media.id,
       region: region.toUpperCase(),
       justWatchLink: regionData.link,
       streaming: formatProviders(regionData.flatrate),
