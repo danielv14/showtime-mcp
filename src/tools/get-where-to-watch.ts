@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
 import { createSuccessResponse, createErrorResponse } from "./helpers/response.js";
-import { requireAtLeastOne, resolveMovieId } from "./helpers/resolvers.js";
+import { requireAtLeastOne, resolveMovieId, resolveTvId } from "./helpers/resolvers.js";
 
 export const registerGetWhereToWatchTool = (
   server: McpServer,
@@ -13,27 +13,31 @@ export const registerGetWhereToWatchTool = (
     {
       title: "Get Where to Watch",
       description:
-        "Find streaming services, rental options, and purchase options for a movie. Powered by JustWatch data via TMDB.",
+        "Find streaming services, rental options, and purchase options for a movie or TV series. Powered by JustWatch data via TMDB.",
       inputSchema: {
+        mediaType: z
+          .enum(["movie", "tv"])
+          .optional()
+          .describe("Whether to look up a movie or a TV series (default: 'movie'). A tmdbId must match this type."),
         title: z
           .string()
           .optional()
-          .describe("Movie title to search for"),
+          .describe("Movie or TV series title to search for"),
         tmdbId: z
           .number()
           .optional()
-          .describe("TMDB movie ID (more accurate than title search)"),
+          .describe("TMDB ID of the movie or TV series (more accurate than title search). Must match mediaType."),
         imdbId: z
           .string()
           .optional()
-          .describe("IMDb ID of the movie (e.g., 'tt0111161')"),
+          .describe("IMDb ID (e.g., 'tt0111161'). Movie lookups only; ignored for TV."),
         region: z
           .string()
           .optional()
           .describe("Country code for regional availability (default: 'US'). Examples: 'US', 'GB', 'CA', 'AU', 'DE', 'FR'"),
       },
     },
-    async ({ title, tmdbId, imdbId, region = "US" }) => {
+    async ({ mediaType = "movie", title, tmdbId, imdbId, region = "US" }) => {
       try {
         const validationError = requireAtLeastOne("getting watch providers", {
           title,
@@ -42,22 +46,50 @@ export const registerGetWhereToWatchTool = (
         });
         if (validationError) return validationError;
 
-        const resolved = await resolveMovieId(
-          tmdbClient,
-          "getting watch providers",
-          { tmdbId, imdbId, title }
-        );
-        if (!resolved.success) return resolved.error;
+        let mediaId: number;
+        let mediaTitle: string;
+        let watchProviders;
 
-        const { id: movieId, title: movieTitle } = resolved.movie;
+        if (mediaType === "tv") {
+          if (imdbId && !tmdbId && !title) {
+            return createErrorResponse(
+              "getting watch providers",
+              new Error(
+                "IMDb ID lookup is only supported for movies. For TV series, provide a tmdbId or title."
+              )
+            );
+          }
 
-        const watchProviders = await tmdbClient.getWatchProviders(movieId);
+          const resolved = await resolveTvId(
+            tmdbClient,
+            "getting watch providers",
+            { tmdbId, title }
+          );
+          if (!resolved.success) return resolved.error;
+
+          mediaId = resolved.tv.id;
+          mediaTitle = resolved.tv.name;
+          watchProviders = await tmdbClient.getTvWatchProviders(mediaId);
+        } else {
+          const resolved = await resolveMovieId(
+            tmdbClient,
+            "getting watch providers",
+            { tmdbId, imdbId, title }
+          );
+          if (!resolved.success) return resolved.error;
+
+          mediaId = resolved.movie.id;
+          mediaTitle = resolved.movie.title;
+          watchProviders = await tmdbClient.getWatchProviders(mediaId);
+        }
+
         const regionData = watchProviders.results[region.toUpperCase()];
 
         if (!regionData) {
           return createSuccessResponse({
-            movieTitle,
-            tmdbId: movieId,
+            mediaType,
+            mediaTitle,
+            tmdbId: mediaId,
             region: region.toUpperCase(),
             message: `No streaming/rental/purchase options available in ${region.toUpperCase()}`,
             availableRegions: Object.keys(watchProviders.results).slice(0, 20),
@@ -73,8 +105,9 @@ export const registerGetWhereToWatchTool = (
         };
 
         return createSuccessResponse({
-          movieTitle,
-          tmdbId: movieId,
+          mediaType,
+          mediaTitle,
+          tmdbId: mediaId,
           region: region.toUpperCase(),
           justWatchLink: regionData.link,
           streaming: formatProviders(regionData.flatrate),

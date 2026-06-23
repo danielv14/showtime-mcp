@@ -130,6 +130,14 @@ export const createTmdbClient = (apiKey: string) => {
       .json<TmdbWatchProviders>();
   };
 
+  const getTvWatchProviders = async (
+    tvId: number
+  ): Promise<TmdbWatchProviders> => {
+    return kyClient
+      .get(`tv/${tvId}/watch/providers`)
+      .json<TmdbWatchProviders>();
+  };
+
   const discoverMovies = async (
     options: DiscoverMoviesOptions
   ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
@@ -390,6 +398,7 @@ export const createTmdbClient = (apiKey: string) => {
     getMovieByImdbId,
     getMovieCredits,
     getWatchProviders,
+    getTvWatchProviders,
     discoverMovies,
     discoverTv,
     getMovieGenres,
