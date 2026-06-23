@@ -36,6 +36,32 @@ export class TmdbApiError extends Error {
   }
 }
 
+/** Option names that differ from their TMDB query-parameter name. */
+const TMDB_PARAM_NAMES: Record<string, string> = {
+  vote_average_gte: "vote_average.gte",
+  vote_average_lte: "vote_average.lte",
+  vote_count_gte: "vote_count.gte",
+  with_runtime_gte: "with_runtime.gte",
+  with_runtime_lte: "with_runtime.lte",
+};
+
+/**
+ * Build a TMDB query-parameter object from an options bag: drop undefined
+ * values and rename the dotted params (e.g. `vote_average_gte` ->
+ * `vote_average.gte`). Exported for the module's own tests; not part of the
+ * client interface.
+ */
+export const buildSearchParams = (
+  options: Record<string, string | number | undefined>
+): Record<string, string | number> => {
+  const searchParams: Record<string, string | number> = {};
+  for (const [key, value] of Object.entries(options)) {
+    if (value === undefined) continue;
+    searchParams[TMDB_PARAM_NAMES[key] ?? key] = value;
+  }
+  return searchParams;
+};
+
 export const createTmdbClient = (apiKey: string) => {
   const kyClient: KyInstance = ky.create({
     prefixUrl: TMDB_BASE_URL,
@@ -62,12 +88,14 @@ export const createTmdbClient = (apiKey: string) => {
     query: string,
     options?: { page?: number; year?: number }
   ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
-    const searchParams: Record<string, string | number> = { query };
-    if (options?.page) searchParams.page = options.page;
-    if (options?.year) searchParams.year = options.year;
-
     return kyClient
-      .get("search/movie", { searchParams })
+      .get("search/movie", {
+        searchParams: buildSearchParams({
+          query,
+          page: options?.page,
+          year: options?.year,
+        }),
+      })
       .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
   };
 
@@ -75,11 +103,10 @@ export const createTmdbClient = (apiKey: string) => {
     query: string,
     options?: { page?: number }
   ): Promise<TmdbSearchResponse<TmdbPersonSearchResult>> => {
-    const searchParams: Record<string, string | number> = { query };
-    if (options?.page) searchParams.page = options.page;
-
     return kyClient
-      .get("search/person", { searchParams })
+      .get("search/person", {
+        searchParams: buildSearchParams({ query, page: options?.page }),
+      })
       .json<TmdbSearchResponse<TmdbPersonSearchResult>>();
   };
 
@@ -141,30 +168,12 @@ export const createTmdbClient = (apiKey: string) => {
   const discoverMovies = async (
     options: DiscoverMoviesOptions
   ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
-    const paramMapping: Record<string, string | number | undefined> = {
-      page: options.page,
-      sort_by: options.sort_by,
-      year: options.year,
-      primary_release_year: options.primary_release_year,
-      with_genres: options.with_genres,
-      without_genres: options.without_genres,
-      with_people: options.with_people,
-      with_crew: options.with_crew,
-      with_cast: options.with_cast,
-      "vote_average.gte": options.vote_average_gte,
-      "vote_average.lte": options.vote_average_lte,
-      "vote_count.gte": options.vote_count_gte,
-      "with_runtime.gte": options.with_runtime_gte,
-      "with_runtime.lte": options.with_runtime_lte,
-      with_original_language: options.with_original_language,
-    };
-
-    const searchParams = Object.fromEntries(
-      Object.entries(paramMapping).filter(([_, v]) => v !== undefined)
-    ) as Record<string, string | number>;
-
     return kyClient
-      .get("discover/movie", { searchParams })
+      .get("discover/movie", {
+        searchParams: buildSearchParams(
+          options as Record<string, string | number | undefined>
+        ),
+      })
       .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
   };
 
@@ -187,11 +196,10 @@ export const createTmdbClient = (apiKey: string) => {
     timeWindow: TmdbTimeWindow,
     options?: { page?: number }
   ): Promise<TmdbSearchResponse<TmdbTrendingResult>> => {
-    const searchParams: Record<string, string | number> = {};
-    if (options?.page) searchParams.page = options.page;
-
     return kyClient
-      .get(`trending/${mediaType}/${timeWindow}`, { searchParams })
+      .get(`trending/${mediaType}/${timeWindow}`, {
+        searchParams: buildSearchParams({ page: options?.page }),
+      })
       .json<TmdbSearchResponse<TmdbTrendingResult>>();
   };
 
@@ -199,11 +207,10 @@ export const createTmdbClient = (apiKey: string) => {
     movieId: number,
     options?: { page?: number }
   ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
-    const searchParams: Record<string, string | number> = {};
-    if (options?.page) searchParams.page = options.page;
-
     return kyClient
-      .get(`movie/${movieId}/recommendations`, { searchParams })
+      .get(`movie/${movieId}/recommendations`, {
+        searchParams: buildSearchParams({ page: options?.page }),
+      })
       .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
   };
 
@@ -212,11 +219,10 @@ export const createTmdbClient = (apiKey: string) => {
     movieId: number,
     options?: { page?: number }
   ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
-    const searchParams: Record<string, string | number> = {};
-    if (options?.page) searchParams.page = options.page;
-
     return kyClient
-      .get(`movie/${movieId}/similar`, { searchParams })
+      .get(`movie/${movieId}/similar`, {
+        searchParams: buildSearchParams({ page: options?.page }),
+      })
       .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
   };
 
@@ -224,12 +230,14 @@ export const createTmdbClient = (apiKey: string) => {
     query: string,
     options?: { page?: number; year?: number }
   ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
-    const searchParams: Record<string, string | number> = { query };
-    if (options?.page) searchParams.page = options.page;
-    if (options?.year) searchParams.first_air_date_year = options.year;
-
     return kyClient
-      .get("search/tv", { searchParams })
+      .get("search/tv", {
+        searchParams: buildSearchParams({
+          query,
+          page: options?.page,
+          first_air_date_year: options?.year,
+        }),
+      })
       .json<TmdbSearchResponse<TmdbTvSearchResult>>();
   };
 
@@ -241,11 +249,10 @@ export const createTmdbClient = (apiKey: string) => {
     tvId: number,
     options?: { page?: number }
   ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
-    const searchParams: Record<string, string | number> = {};
-    if (options?.page) searchParams.page = options.page;
-
     return kyClient
-      .get(`tv/${tvId}/recommendations`, { searchParams })
+      .get(`tv/${tvId}/recommendations`, {
+        searchParams: buildSearchParams({ page: options?.page }),
+      })
       .json<TmdbSearchResponse<TmdbTvSearchResult>>();
   };
 
@@ -254,11 +261,10 @@ export const createTmdbClient = (apiKey: string) => {
     tvId: number,
     options?: { page?: number }
   ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
-    const searchParams: Record<string, string | number> = {};
-    if (options?.page) searchParams.page = options.page;
-
     return kyClient
-      .get(`tv/${tvId}/similar`, { searchParams })
+      .get(`tv/${tvId}/similar`, {
+        searchParams: buildSearchParams({ page: options?.page }),
+      })
       .json<TmdbSearchResponse<TmdbTvSearchResult>>();
   };
 
@@ -273,29 +279,12 @@ export const createTmdbClient = (apiKey: string) => {
   const discoverTv = async (
     options: DiscoverTvOptions
   ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
-    const paramMapping: Record<string, string | number | undefined> = {
-      page: options.page,
-      sort_by: options.sort_by,
-      first_air_date_year: options.first_air_date_year,
-      with_genres: options.with_genres,
-      without_genres: options.without_genres,
-      with_networks: options.with_networks,
-      "vote_average.gte": options.vote_average_gte,
-      "vote_average.lte": options.vote_average_lte,
-      "vote_count.gte": options.vote_count_gte,
-      "with_runtime.gte": options.with_runtime_gte,
-      "with_runtime.lte": options.with_runtime_lte,
-      with_original_language: options.with_original_language,
-      with_status: options.with_status,
-      with_type: options.with_type,
-    };
-
-    const searchParams = Object.fromEntries(
-      Object.entries(paramMapping).filter(([_, v]) => v !== undefined)
-    ) as Record<string, string | number>;
-
     return kyClient
-      .get("discover/tv", { searchParams })
+      .get("discover/tv", {
+        searchParams: buildSearchParams(
+          options as Record<string, string | number | undefined>
+        ),
+      })
       .json<TmdbSearchResponse<TmdbTvSearchResult>>();
   };
 
@@ -303,11 +292,10 @@ export const createTmdbClient = (apiKey: string) => {
     query: string,
     options?: { page?: number }
   ): Promise<TmdbSearchResponse<TmdbMultiSearchResult>> => {
-    const searchParams: Record<string, string | number> = { query };
-    if (options?.page) searchParams.page = options.page;
-
     return kyClient
-      .get("search/multi", { searchParams })
+      .get("search/multi", {
+        searchParams: buildSearchParams({ query, page: options?.page }),
+      })
       .json<TmdbSearchResponse<TmdbMultiSearchResult>>();
   };
 
@@ -322,46 +310,46 @@ export const createTmdbClient = (apiKey: string) => {
   const getNowPlayingMovies = async (
     options?: { page?: number; region?: string }
   ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
-    const searchParams: Record<string, string | number> = {};
-    if (options?.page) searchParams.page = options.page;
-    if (options?.region) searchParams.region = options.region;
-
     return kyClient
-      .get("movie/now_playing", { searchParams })
+      .get("movie/now_playing", {
+        searchParams: buildSearchParams({
+          page: options?.page,
+          region: options?.region,
+        }),
+      })
       .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
   };
 
   const getUpcomingMovies = async (
     options?: { page?: number; region?: string }
   ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
-    const searchParams: Record<string, string | number> = {};
-    if (options?.page) searchParams.page = options.page;
-    if (options?.region) searchParams.region = options.region;
-
     return kyClient
-      .get("movie/upcoming", { searchParams })
+      .get("movie/upcoming", {
+        searchParams: buildSearchParams({
+          page: options?.page,
+          region: options?.region,
+        }),
+      })
       .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
   };
 
   const getAiringTodayTv = async (
     options?: { page?: number }
   ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
-    const searchParams: Record<string, string | number> = {};
-    if (options?.page) searchParams.page = options.page;
-
     return kyClient
-      .get("tv/airing_today", { searchParams })
+      .get("tv/airing_today", {
+        searchParams: buildSearchParams({ page: options?.page }),
+      })
       .json<TmdbSearchResponse<TmdbTvSearchResult>>();
   };
 
   const getOnTheAirTv = async (
     options?: { page?: number }
   ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
-    const searchParams: Record<string, string | number> = {};
-    if (options?.page) searchParams.page = options.page;
-
     return kyClient
-      .get("tv/on_the_air", { searchParams })
+      .get("tv/on_the_air", {
+        searchParams: buildSearchParams({ page: options?.page }),
+      })
       .json<TmdbSearchResponse<TmdbTvSearchResult>>();
   };
 
@@ -369,11 +357,10 @@ export const createTmdbClient = (apiKey: string) => {
     movieId: number,
     options?: { page?: number }
   ): Promise<TmdbReviewsResponse> => {
-    const searchParams: Record<string, string | number> = {};
-    if (options?.page) searchParams.page = options.page;
-
     return kyClient
-      .get(`movie/${movieId}/reviews`, { searchParams })
+      .get(`movie/${movieId}/reviews`, {
+        searchParams: buildSearchParams({ page: options?.page }),
+      })
       .json<TmdbReviewsResponse>();
   };
 
@@ -381,11 +368,10 @@ export const createTmdbClient = (apiKey: string) => {
     tvId: number,
     options?: { page?: number }
   ): Promise<TmdbReviewsResponse> => {
-    const searchParams: Record<string, string | number> = {};
-    if (options?.page) searchParams.page = options.page;
-
     return kyClient
-      .get(`tv/${tvId}/reviews`, { searchParams })
+      .get(`tv/${tvId}/reviews`, {
+        searchParams: buildSearchParams({ page: options?.page }),
+      })
       .json<TmdbReviewsResponse>();
   };
 
