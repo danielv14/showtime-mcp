@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { buildSearchParams } from "../client.js";
+import { buildSearchParams, mediaPath } from "../client.js";
 
 describe("buildSearchParams", () => {
   it("includes only defined keys", () => {
@@ -52,5 +52,31 @@ describe("buildSearchParams", () => {
 
   it("keeps a defined zero rather than treating it as absent", () => {
     expect(buildSearchParams({ page: 0 })).toEqual({ page: 0 });
+  });
+});
+
+describe("mediaPath", () => {
+  it("builds movie paths for each twin suffix", () => {
+    expect(mediaPath("movie", 123, "similar")).toBe("movie/123/similar");
+    expect(mediaPath("movie", 123, "recommendations")).toBe(
+      "movie/123/recommendations"
+    );
+    expect(mediaPath("movie", 123, "reviews")).toBe("movie/123/reviews");
+    expect(mediaPath("movie", 123, "videos")).toBe("movie/123/videos");
+    expect(mediaPath("movie", 123, "watch/providers")).toBe(
+      "movie/123/watch/providers"
+    );
+  });
+
+  it("builds tv paths for each twin suffix", () => {
+    expect(mediaPath("tv", 456, "similar")).toBe("tv/456/similar");
+    expect(mediaPath("tv", 456, "recommendations")).toBe(
+      "tv/456/recommendations"
+    );
+    expect(mediaPath("tv", 456, "reviews")).toBe("tv/456/reviews");
+    expect(mediaPath("tv", 456, "videos")).toBe("tv/456/videos");
+    expect(mediaPath("tv", 456, "watch/providers")).toBe(
+      "tv/456/watch/providers"
+    );
   });
 });

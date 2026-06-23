@@ -62,6 +62,17 @@ export const buildSearchParams = (
   return searchParams;
 };
 
+/**
+ * Build a movie/tv sub-resource endpoint path, e.g. `movie/123/similar` or
+ * `tv/123/watch/providers`. Keeps the movie/tv twin methods from drifting
+ * apart. Exported for the module's own tests; not part of the client interface.
+ */
+export const mediaPath = (
+  type: "movie" | "tv",
+  id: number,
+  suffix: string
+): string => `${type}/${id}/${suffix}`;
+
 export const createTmdbClient = (apiKey: string) => {
   const kyClient: KyInstance = ky.create({
     prefixUrl: TMDB_BASE_URL,
@@ -153,7 +164,7 @@ export const createTmdbClient = (apiKey: string) => {
     movieId: number
   ): Promise<TmdbWatchProviders> => {
     return kyClient
-      .get(`movie/${movieId}/watch/providers`)
+      .get(mediaPath("movie", movieId, "watch/providers"))
       .json<TmdbWatchProviders>();
   };
 
@@ -161,7 +172,7 @@ export const createTmdbClient = (apiKey: string) => {
     tvId: number
   ): Promise<TmdbWatchProviders> => {
     return kyClient
-      .get(`tv/${tvId}/watch/providers`)
+      .get(mediaPath("tv", tvId, "watch/providers"))
       .json<TmdbWatchProviders>();
   };
 
@@ -208,7 +219,7 @@ export const createTmdbClient = (apiKey: string) => {
     options?: { page?: number }
   ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
     return kyClient
-      .get(`movie/${movieId}/recommendations`, {
+      .get(mediaPath("movie", movieId, "recommendations"), {
         searchParams: buildSearchParams({ page: options?.page }),
       })
       .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
@@ -220,7 +231,7 @@ export const createTmdbClient = (apiKey: string) => {
     options?: { page?: number }
   ): Promise<TmdbSearchResponse<TmdbMovieSearchResult>> => {
     return kyClient
-      .get(`movie/${movieId}/similar`, {
+      .get(mediaPath("movie", movieId, "similar"), {
         searchParams: buildSearchParams({ page: options?.page }),
       })
       .json<TmdbSearchResponse<TmdbMovieSearchResult>>();
@@ -250,7 +261,7 @@ export const createTmdbClient = (apiKey: string) => {
     options?: { page?: number }
   ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
     return kyClient
-      .get(`tv/${tvId}/recommendations`, {
+      .get(mediaPath("tv", tvId, "recommendations"), {
         searchParams: buildSearchParams({ page: options?.page }),
       })
       .json<TmdbSearchResponse<TmdbTvSearchResult>>();
@@ -262,7 +273,7 @@ export const createTmdbClient = (apiKey: string) => {
     options?: { page?: number }
   ): Promise<TmdbSearchResponse<TmdbTvSearchResult>> => {
     return kyClient
-      .get(`tv/${tvId}/similar`, {
+      .get(mediaPath("tv", tvId, "similar"), {
         searchParams: buildSearchParams({ page: options?.page }),
       })
       .json<TmdbSearchResponse<TmdbTvSearchResult>>();
@@ -300,11 +311,15 @@ export const createTmdbClient = (apiKey: string) => {
   };
 
   const getMovieVideos = async (movieId: number): Promise<TmdbVideosResponse> => {
-    return kyClient.get(`movie/${movieId}/videos`).json<TmdbVideosResponse>();
+    return kyClient
+      .get(mediaPath("movie", movieId, "videos"))
+      .json<TmdbVideosResponse>();
   };
 
   const getTvVideos = async (tvId: number): Promise<TmdbVideosResponse> => {
-    return kyClient.get(`tv/${tvId}/videos`).json<TmdbVideosResponse>();
+    return kyClient
+      .get(mediaPath("tv", tvId, "videos"))
+      .json<TmdbVideosResponse>();
   };
 
   const getNowPlayingMovies = async (
@@ -358,7 +373,7 @@ export const createTmdbClient = (apiKey: string) => {
     options?: { page?: number }
   ): Promise<TmdbReviewsResponse> => {
     return kyClient
-      .get(`movie/${movieId}/reviews`, {
+      .get(mediaPath("movie", movieId, "reviews"), {
         searchParams: buildSearchParams({ page: options?.page }),
       })
       .json<TmdbReviewsResponse>();
@@ -369,7 +384,7 @@ export const createTmdbClient = (apiKey: string) => {
     options?: { page?: number }
   ): Promise<TmdbReviewsResponse> => {
     return kyClient
-      .get(`tv/${tvId}/reviews`, {
+      .get(mediaPath("tv", tvId, "reviews"), {
         searchParams: buildSearchParams({ page: options?.page }),
       })
       .json<TmdbReviewsResponse>();
