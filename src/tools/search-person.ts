@@ -1,50 +1,35 @@
 import { z } from "zod";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { TmdbClient } from "../tmdb-api/index.js";
-import { createPaginatedResponse, createErrorResponse } from "./helpers/response.js";
+import { defineTool, paginatedResult } from "./define-tool.js";
 import { extractYear } from "./helpers/formatters.js";
 
-export const registerSearchPersonTool = (
-  server: McpServer,
-  tmdbClient: TmdbClient
-) => {
-  server.registerTool(
-    "search_person",
-    {
-      title: "Search Person",
-      description:
-        "Search for actors, directors, and other crew members by name. Returns a list of matching people with their TMDB ID (needed for filmography lookup), known department, and notable works.",
-      inputSchema: {
-        query: z.string().describe("Person name to search for"),
-        page: z
-          .number()
-          .min(1)
-          .optional()
-          .describe("Page number for pagination (20 results per page)"),
-      },
-    },
-    async ({ query, page }) => {
-      try {
-        const result = await tmdbClient.searchPerson(query, { page });
+export const searchPersonTool = defineTool({
+  name: "search_person",
+  title: "Search Person",
+  description:
+    "Search for actors, directors, and other crew members by name. Returns a list of matching people with their TMDB ID (needed for filmography lookup), known department, and notable works.",
+  schema: {
+    query: z.string().describe("Person name to search for"),
+    page: z
+      .number()
+      .min(1)
+      .optional()
+      .describe("Page number for pagination (20 results per page)"),
+  },
+  handler: async ({ query, page }, { tmdb }) => {
+    const result = await tmdb.searchPerson(query, { page });
 
-        const formattedResults = result.results.map((person) => ({
-          tmdbId: person.id,
-          name: person.name,
-          knownForDepartment: person.known_for_department,
-          profileImageUrl: tmdbClient.getImageUrl(person.profile_path, "w185"),
-          knownFor: person.known_for.slice(0, 3).map((movie) => ({
-            title: movie.title,
-            year: extractYear(movie.release_date),
-            tmdbId: movie.id,
-          })),
-        }));
+    const formattedResults = result.results.map((person) => ({
+      tmdbId: person.id,
+      name: person.name,
+      knownForDepartment: person.known_for_department,
+      profileImageUrl: tmdb.getImageUrl(person.profile_path, "w185"),
+      knownFor: person.known_for.slice(0, 3).map((movie) => ({
+        title: movie.title,
+        year: extractYear(movie.release_date),
+        tmdbId: movie.id,
+      })),
+    }));
 
-        return createPaginatedResponse(result, {
-          results: formattedResults,
-        });
-      } catch (error) {
-        return createErrorResponse("searching person", error);
-      }
-    }
-  );
-};
+    return paginatedResult(result, { results: formattedResults });
+  },
+});

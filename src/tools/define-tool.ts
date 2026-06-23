@@ -27,7 +27,7 @@ export interface ToolDefinition<Shape extends z.ZodRawShape = z.ZodRawShape> {
   handler: (
     args: z.infer<z.ZodObject<Shape>>,
     clients: ToolClients
-  ) => unknown | Promise<unknown>;
+  ) => Promise<unknown>;
 }
 
 /** Identity helper that preserves per-tool schema inference for the handler args. */
@@ -62,6 +62,25 @@ export const paginatedResult = (
 const isPaginatedResult = (value: unknown): value is PaginatedResult =>
   typeof value === "object" && value !== null && PAGINATED in value;
 
+/**
+ * Thrown by {@link failWith} to surface a response that some helper has already
+ * formatted (e.g. the structured error from `requireAtLeastOne` or the resolver
+ * helpers) through the runner's single catch, without it being re-wrapped.
+ */
+export class ToolResponseError extends Error {
+  constructor(public readonly response: ReturnType<typeof createErrorResponse>) {
+    super("tool response");
+    this.name = "ToolResponseError";
+  }
+}
+
+/** Abort the current handler and return an already-formatted MCP response. */
+export const failWith = (
+  response: ReturnType<typeof createErrorResponse>
+): never => {
+  throw new ToolResponseError(response);
+};
+
 /** Error-handling context for a tool, derived once from its title. */
 const errorContext = (definition: AnyToolDefinition): string =>
   definition.title.toLowerCase();
@@ -91,6 +110,9 @@ export const registerTool = (
         }
         return createSuccessResponse(result);
       } catch (error) {
+        if (error instanceof ToolResponseError) {
+          return error.response;
+        }
         return createErrorResponse(errorContext(definition), error);
       }
     }
