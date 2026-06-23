@@ -1,7 +1,11 @@
 import { capTotalPages } from "./constants.js";
 
 export const createSuccessResponse = (data: unknown) => ({
-  content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
+  // Coerce undefined to null so the text content is always a string; a handler
+  // that returns nothing would otherwise yield `text: undefined`.
+  content: [
+    { type: "text" as const, text: JSON.stringify(data ?? null, null, 2) },
+  ],
 });
 
 export const createErrorResponse = (context: string, error: unknown) => ({
