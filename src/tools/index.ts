@@ -3,11 +3,13 @@ import type { OmdbClient } from "../omdb-api/index.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
 import { registerTool, type AnyToolDefinition } from "./define-tool.js";
 
-// Migrated tools (defineTool seam)
+// TMDB-powered tools
 import { searchMoviesTool } from "./search-movies.js";
 import { searchPersonTool } from "./search-person.js";
 import { discoverMoviesTool } from "./discover-movies.js";
 import { discoverTvTool } from "./discover-tv.js";
+import { getWhereToWatchTool } from "./get-where-to-watch.js";
+import { getFilmographyTool } from "./get-filmography.js";
 import { getTrendingTool } from "./get-trending.js";
 import { getMovieRecommendationsTool } from "./get-recommendations.js";
 import { getTvRecommendationsTool } from "./get-tv-recommendations.js";
@@ -18,25 +20,28 @@ import { getUpcomingTool } from "./get-upcoming.js";
 import { getAiringTodayTool } from "./get-airing-today.js";
 import { getPersonDetailsTool } from "./get-person-details.js";
 import { multiSearchTool } from "./multi-search.js";
+import { getSimilarTool } from "./get-similar.js";
+import { getReviewsTool } from "./get-reviews.js";
+
+// Hybrid tools (OMDB + TMDB)
+import { getMovieTool } from "./get-movie.js";
+
+// OMDB-only tools (TV series)
 import { searchSeriesTool } from "./search-series.js";
 import { getSeriesTool } from "./get-series.js";
 import { getEpisodeTool } from "./get-episode.js";
 import { getSeasonTool } from "./get-season.js";
 import { getAllEpisodesTool } from "./get-all-episodes.js";
 
-// Tools not yet migrated (hybrid + media-seam slices)
-import { registerGetWhereToWatchTool } from "./get-where-to-watch.js";
-import { registerGetFilmographyTool } from "./get-filmography.js";
-import { registerGetSimilarTool } from "./get-similar.js";
-import { registerGetReviewsTool } from "./get-reviews.js";
-import { registerGetMovieTool } from "./get-movie.js";
-
-/** Tools migrated to the defineTool seam; registered through a single loop. */
+/** Every tool, declared via the defineTool seam and registered in one loop. */
 const toolDefinitions: AnyToolDefinition[] = [
+  // TMDB-powered tools
   searchMoviesTool,
   searchPersonTool,
   discoverMoviesTool,
   discoverTvTool,
+  getWhereToWatchTool,
+  getFilmographyTool,
   getTrendingTool,
   getMovieRecommendationsTool,
   getTvRecommendationsTool,
@@ -47,6 +52,11 @@ const toolDefinitions: AnyToolDefinition[] = [
   getAiringTodayTool,
   getPersonDetailsTool,
   multiSearchTool,
+  getSimilarTool,
+  getReviewsTool,
+  // Hybrid tool (combines OMDB ratings with TMDB data)
+  getMovieTool,
+  // OMDB-only tools (TV series support)
   searchSeriesTool,
   getSeriesTool,
   getEpisodeTool,
@@ -63,11 +73,4 @@ export const registerAllTools = (
   for (const definition of toolDefinitions) {
     registerTool(server, definition, clients);
   }
-
-  // Not yet migrated to the defineTool seam.
-  registerGetWhereToWatchTool(server, tmdbClient);
-  registerGetFilmographyTool(server, tmdbClient);
-  registerGetSimilarTool(server, tmdbClient);
-  registerGetReviewsTool(server, tmdbClient);
-  registerGetMovieTool(server, omdbClient, tmdbClient);
 };
