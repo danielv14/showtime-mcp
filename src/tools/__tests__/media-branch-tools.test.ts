@@ -3,7 +3,7 @@ import { getSimilarTool } from "../get-similar.js";
 import { getReviewsTool } from "../get-reviews.js";
 import { getWhereToWatchTool } from "../get-where-to-watch.js";
 import { createFakeTmdbClient, createFakeOmdbClient } from "./fakes.js";
-import { ToolResponseError, type ToolClients } from "../define-tool.js";
+import type { ToolClients } from "../define-tool.js";
 import type {
   TmdbSearchResponse,
   TmdbMovieSearchResult,
@@ -65,9 +65,9 @@ describe("get_similar", () => {
     expect(result.data.basedOn).toEqual({ tmdbId: 2, name: "Source Show", genres: ["Crime"] });
   });
 
-  it("throws the guard error when neither id is given", async () => {
-    await expect(getSimilarTool.handler({}, tmdb({}))).rejects.toBeInstanceOf(
-      ToolResponseError
+  it("throws the at-least-one guard error when neither id is given", async () => {
+    await expect(getSimilarTool.handler({}, tmdb({}))).rejects.toThrow(
+      /At least one of 'movieId', 'tvId'/
     );
   });
 });
@@ -77,7 +77,7 @@ describe("get_reviews", () => {
     const result = (await getReviewsTool.handler(
       { movieId: 1 },
       tmdb({
-        getMovieDetails: async () => ({ title: "M" }) as never,
+        getMovieDetails: async () => ({ id: 1, title: "M" }) as never,
         getMovieReviews: async () =>
           ({
             page: 1,
@@ -88,16 +88,39 @@ describe("get_reviews", () => {
             ],
           }) as never,
       })
-    )) as { mediaType: string; mediaTitle: string; totalReviews: number; reviews: unknown[] };
+    )) as { mediaType: string; mediaTitle: string; mediaId: number; totalReviews: number; reviews: unknown[] };
     expect(result.mediaType).toBe("movie");
     expect(result.mediaTitle).toBe("M");
+    expect(result.mediaId).toBe(1);
     expect(result.totalReviews).toBe(1);
     expect(result.reviews.length).toBe(1);
   });
 
-  it("throws the guard error when neither id is given", async () => {
-    await expect(getReviewsTool.handler({}, tmdb({}))).rejects.toBeInstanceOf(
-      ToolResponseError
+  it("returns formatted reviews for the tv branch", async () => {
+    const result = (await getReviewsTool.handler(
+      { tvId: 7 },
+      tmdb({
+        getTvDetails: async () => ({ id: 7, name: "Show" }) as never,
+        getTvReviews: async () =>
+          ({
+            page: 1,
+            total_pages: 1,
+            total_results: 2,
+            results: [
+              { id: "r1", author: "a", author_details: { username: "u", rating: 8 }, content: "ok", created_at: "2021", url: "http://y" },
+            ],
+          }) as never,
+      })
+    )) as { mediaType: string; mediaTitle: string; mediaId: number; totalReviews: number };
+    expect(result.mediaType).toBe("tv");
+    expect(result.mediaTitle).toBe("Show");
+    expect(result.mediaId).toBe(7);
+    expect(result.totalReviews).toBe(2);
+  });
+
+  it("throws the at-least-one guard error when neither id is given", async () => {
+    await expect(getReviewsTool.handler({}, tmdb({}))).rejects.toThrow(
+      /At least one of 'movieId', 'tvId'/
     );
   });
 });

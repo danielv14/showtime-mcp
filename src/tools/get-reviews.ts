@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { defineTool, failWith } from "./define-tool.js";
+import { defineTool } from "./define-tool.js";
 import { formatReview } from "./helpers/formatters.js";
-import { requireAtLeastOne } from "./helpers/resolvers.js";
+import { resolveMedia, atLeastOneMessage } from "./helpers/resolvers.js";
 
 export const getReviewsTool = defineTool({
   name: "get_reviews",
@@ -19,42 +19,33 @@ export const getReviewsTool = defineTool({
       .describe("TMDB TV series ID (use search_series to find IDs)"),
     page: z.number().min(1).optional().describe("Page number for pagination"),
   },
-  handler: async ({ movieId, tvId, page }, { tmdb }) => {
-    const guardError = requireAtLeastOne("getting reviews", { movieId, tvId });
-    if (guardError) return failWith(guardError);
-
-    let mediaTitle = "";
-    let mediaType: "movie" | "tv" = "movie";
-    let reviewsResponse;
-
-    if (movieId) {
-      const [reviews, movieDetails] = await Promise.all([
-        tmdb.getMovieReviews(movieId, { page }),
-        tmdb.getMovieDetails(movieId),
-      ]);
-      reviewsResponse = reviews;
-      mediaTitle = movieDetails.title;
-      mediaType = "movie";
-    } else if (tvId) {
-      const [reviews, tvDetails] = await Promise.all([
-        tmdb.getTvReviews(tvId, { page }),
-        tmdb.getTvDetails(tvId),
-      ]);
-      reviewsResponse = reviews;
-      mediaTitle = tvDetails.name;
-      mediaType = "tv";
+  handler: async ({ movieId, tvId, page }, clients) => {
+    // This tool's identifiers are movieId/tvId, so it guards with their names
+    // here rather than relying on resolveMedia's tmdbId/imdbId/title message.
+    if (movieId === undefined && tvId === undefined) {
+      throw new Error(atLeastOneMessage(["movieId", "tvId"]));
     }
 
-    const formattedReviews = reviewsResponse!.results.map(formatReview);
+    const media = await resolveMedia(
+      clients,
+      movieId !== undefined
+        ? { mediaType: "movie", tmdbId: movieId }
+        : { mediaType: "tv", tmdbId: tvId }
+    );
+
+    const reviewsResponse =
+      media.type === "movie"
+        ? await clients.tmdb.getMovieReviews(media.id, { page })
+        : await clients.tmdb.getTvReviews(media.id, { page });
 
     return {
-      mediaType,
-      mediaTitle,
-      mediaId: movieId || tvId,
-      reviews: formattedReviews,
-      totalReviews: reviewsResponse!.total_results,
-      page: reviewsResponse!.page,
-      totalPages: reviewsResponse!.total_pages,
+      mediaType: media.type,
+      mediaTitle: media.name,
+      mediaId: media.id,
+      reviews: reviewsResponse.results.map(formatReview),
+      totalReviews: reviewsResponse.total_results,
+      page: reviewsResponse.page,
+      totalPages: reviewsResponse.total_pages,
     };
   },
 });

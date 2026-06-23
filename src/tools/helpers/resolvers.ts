@@ -3,7 +3,7 @@ import type { ToolClients } from "../define-tool.js";
 import { createErrorResponse } from "./response.js";
 
 /** The shared "at least one of …" message, so guards never drift in wording. */
-const atLeastOneMessage = (fields: string[]): string =>
+export const atLeastOneMessage = (fields: string[]): string =>
   `At least one of ${fields.map((f) => `'${f}'`).join(", ")} must be provided`;
 
 export const requireAtLeastOne = (

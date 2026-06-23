@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { defineTool, paginatedResult, failWith } from "./define-tool.js";
+import { defineTool, paginatedResult } from "./define-tool.js";
 import { formatTmdbMovieResult, formatTmdbTvResult } from "./helpers/formatters.js";
-import { requireAtLeastOne } from "./helpers/resolvers.js";
+import { resolveMedia, atLeastOneMessage } from "./helpers/resolvers.js";
 
 export const getSimilarTool = defineTool({
   name: "get_similar",
@@ -23,49 +23,60 @@ export const getSimilarTool = defineTool({
       .optional()
       .describe("Page number for pagination (20 results per page)"),
   },
-  handler: async ({ movieId, tvId, page }, { tmdb }) => {
-    const guardError = requireAtLeastOne("getting similar content", {
-      movieId,
-      tvId,
-    });
-    if (guardError) return failWith(guardError);
+  handler: async ({ movieId, tvId, page }, clients) => {
+    // This tool's identifiers are movieId/tvId, so it guards with their names
+    // here rather than relying on resolveMedia's tmdbId/imdbId/title message.
+    if (movieId === undefined && tvId === undefined) {
+      throw new Error(atLeastOneMessage(["movieId", "tvId"]));
+    }
 
-    if (movieId) {
+    const media = await resolveMedia(
+      clients,
+      movieId !== undefined
+        ? { mediaType: "movie", tmdbId: movieId }
+        : { mediaType: "tv", tmdbId: tvId }
+    );
+
+    // The source's genres are not part of ResolvedMedia, so fetch details for them.
+    if (media.type === "movie") {
       const [similarResult, movieDetails] = await Promise.all([
-        tmdb.getSimilarMovies(movieId, { page }),
-        tmdb.getMovieDetails(movieId),
+        clients.tmdb.getSimilarMovies(media.id, { page }),
+        clients.tmdb.getMovieDetails(media.id),
       ]);
 
       const formattedResults = similarResult.results.map((movie) =>
-        formatTmdbMovieResult(movie, tmdb.getImageUrl, { includeVoteCount: true })
+        formatTmdbMovieResult(movie, clients.tmdb.getImageUrl, {
+          includeVoteCount: true,
+        })
       );
 
       return paginatedResult(similarResult, {
         mediaType: "movie",
         basedOn: {
-          tmdbId: movieDetails.id,
-          title: movieDetails.title,
+          tmdbId: media.id,
+          title: media.name,
           genres: movieDetails.genres.map((g) => g.name),
         },
         similar: formattedResults,
       });
     }
 
-    // TV show
     const [similarResult, tvDetails] = await Promise.all([
-      tmdb.getSimilarTv(tvId!, { page }),
-      tmdb.getTvDetails(tvId!),
+      clients.tmdb.getSimilarTv(media.id, { page }),
+      clients.tmdb.getTvDetails(media.id),
     ]);
 
     const formattedResults = similarResult.results.map((show) =>
-      formatTmdbTvResult(show, tmdb.getImageUrl, { includeVoteCount: true })
+      formatTmdbTvResult(show, clients.tmdb.getImageUrl, {
+        includeVoteCount: true,
+      })
     );
 
     return paginatedResult(similarResult, {
       mediaType: "tv",
       basedOn: {
-        tmdbId: tvDetails.id,
-        name: tvDetails.name,
+        tmdbId: media.id,
+        name: media.name,
         genres: tvDetails.genres.map((g) => g.name),
       },
       similar: formattedResults,
