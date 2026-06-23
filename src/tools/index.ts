@@ -1,9 +1,12 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { OmdbClient } from "../omdb-api/index.js";
 import type { TmdbClient } from "../tmdb-api/index.js";
+import { registerTool, type AnyToolDefinition } from "./define-tool.js";
 
-// TMDB-powered tools
-import { registerSearchMoviesTool } from "./search-movies.js";
+// Migrated tools (defineTool seam)
+import { searchMoviesTool } from "./search-movies.js";
+
+// TMDB-powered tools (not yet migrated)
 import { registerSearchPersonTool } from "./search-person.js";
 import { registerDiscoverMoviesTool } from "./discover-movies.js";
 import { registerDiscoverTvTool } from "./discover-tv.js";
@@ -32,13 +35,20 @@ import { registerGetEpisodeTool } from "./get-episode.js";
 import { registerGetSeasonTool } from "./get-season.js";
 import { registerGetAllEpisodesTool } from "./get-all-episodes.js";
 
+/** Tools migrated to the defineTool seam; registered through a single loop. */
+const toolDefinitions: AnyToolDefinition[] = [searchMoviesTool];
+
 export const registerAllTools = (
   server: McpServer,
   omdbClient: OmdbClient,
   tmdbClient: TmdbClient
 ) => {
-  // TMDB-powered movie tools
-  registerSearchMoviesTool(server, tmdbClient);
+  const clients = { tmdb: tmdbClient, omdb: omdbClient };
+  for (const definition of toolDefinitions) {
+    registerTool(server, definition, clients);
+  }
+
+  // TMDB-powered movie tools (not yet migrated)
   registerSearchPersonTool(server, tmdbClient);
   registerDiscoverMoviesTool(server, tmdbClient);
   registerDiscoverTvTool(server, tmdbClient);
