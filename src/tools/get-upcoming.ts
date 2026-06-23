@@ -1,50 +1,32 @@
 import { z } from "zod";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { TmdbClient } from "../tmdb-api/index.js";
-import { createPaginatedResponse, createErrorResponse } from "./helpers/response.js";
+import { defineTool, paginatedResult } from "./define-tool.js";
 import { formatTmdbMovieResult } from "./helpers/formatters.js";
 
-export const registerGetUpcomingTool = (
-  server: McpServer,
-  tmdbClient: TmdbClient
-) => {
-  server.registerTool(
-    "get_upcoming",
-    {
-      title: "Get Upcoming Movies",
-      description:
-        "Get upcoming movie releases. Results are region-specific and sorted by release date.",
-      inputSchema: {
-        region: z
-          .string()
-          .optional()
-          .describe(
-            "ISO 3166-1 country code for regional results (e.g., 'US', 'GB', 'SE'). Defaults to US."
-          ),
-        page: z
-          .number()
-          .min(1)
-          .optional()
-          .describe("Page number for pagination (20 results per page)"),
-      },
-    },
-    async ({ region = "US", page }) => {
-      try {
-        const result = await tmdbClient.getUpcomingMovies({ page, region });
+export const getUpcomingTool = defineTool({
+  name: "get_upcoming",
+  title: "Get Upcoming Movies",
+  description:
+    "Get upcoming movie releases. Results are region-specific and sorted by release date.",
+  schema: {
+    region: z
+      .string()
+      .optional()
+      .describe(
+        "ISO 3166-1 country code for regional results (e.g., 'US', 'GB', 'SE'). Defaults to US."
+      ),
+    page: z
+      .number()
+      .min(1)
+      .optional()
+      .describe("Page number for pagination (20 results per page)"),
+  },
+  handler: async ({ region = "US", page }, { tmdb }) => {
+    const result = await tmdb.getUpcomingMovies({ page, region });
 
-        const formattedResults = result.results.map((movie) =>
-          formatTmdbMovieResult(movie, tmdbClient.getImageUrl, {
-            includeVoteCount: true,
-          })
-        );
+    const formattedResults = result.results.map((movie) =>
+      formatTmdbMovieResult(movie, tmdb.getImageUrl, { includeVoteCount: true })
+    );
 
-        return createPaginatedResponse(result, {
-          results: formattedResults,
-          region,
-        });
-      } catch (error) {
-        return createErrorResponse("getting upcoming movies", error);
-      }
-    }
-  );
-};
+    return paginatedResult(result, { results: formattedResults, region });
+  },
+});

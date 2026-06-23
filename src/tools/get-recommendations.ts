@@ -1,73 +1,53 @@
 import { z } from "zod";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { TmdbClient } from "../tmdb-api/index.js";
-import { createPaginatedResponse, createErrorResponse } from "./helpers/response.js";
+import { defineTool, paginatedResult, failWith } from "./define-tool.js";
 import { formatTmdbMovieResult } from "./helpers/formatters.js";
 import { requireAtLeastOne, resolveMovieId } from "./helpers/resolvers.js";
 
-export const registerGetRecommendationsTool = (
-  server: McpServer,
-  tmdbClient: TmdbClient
-) => {
-  server.registerTool(
-    "get_movie_recommendations",
-    {
-      title: "Get Movie Recommendations",
-      description:
-        "Get movie recommendations based on a specific movie. Great for finding similar movies you might enjoy. Uses TMDB's recommendation algorithm.",
-      inputSchema: {
-        tmdbId: z
-          .number()
-          .optional()
-          .describe("TMDB movie ID (use search_movies to find IDs)"),
-        title: z
-          .string()
-          .optional()
-          .describe("Movie title to get recommendations for"),
-        page: z
-          .number()
-          .min(1)
-          .optional()
-          .describe("Page number for pagination (20 results per page)"),
-      },
-    },
-    async ({ tmdbId, title, page }) => {
-      try {
-        const validationError = requireAtLeastOne(
-          "getting movie recommendations",
-          { tmdbId, title }
-        );
-        if (validationError) return validationError;
+export const getMovieRecommendationsTool = defineTool({
+  name: "get_movie_recommendations",
+  title: "Get Movie Recommendations",
+  description:
+    "Get movie recommendations based on a specific movie. Great for finding similar movies you might enjoy. Uses TMDB's recommendation algorithm.",
+  schema: {
+    tmdbId: z
+      .number()
+      .optional()
+      .describe("TMDB movie ID (use search_movies to find IDs)"),
+    title: z
+      .string()
+      .optional()
+      .describe("Movie title to get recommendations for"),
+    page: z
+      .number()
+      .min(1)
+      .optional()
+      .describe("Page number for pagination (20 results per page)"),
+  },
+  handler: async ({ tmdbId, title, page }, { tmdb }) => {
+    const guardError = requireAtLeastOne("getting movie recommendations", {
+      tmdbId,
+      title,
+    });
+    if (guardError) return failWith(guardError);
 
-        const resolved = await resolveMovieId(
-          tmdbClient,
-          "getting movie recommendations",
-          { tmdbId, title }
-        );
-        if (!resolved.success) return resolved.error;
+    const resolved = await resolveMovieId(
+      tmdb,
+      "getting movie recommendations",
+      { tmdbId, title }
+    );
+    if (!resolved.success) return failWith(resolved.error);
 
-        const { id: movieId, title: sourceMovieTitle } = resolved.movie;
+    const { id: movieId, title: sourceMovieTitle } = resolved.movie;
 
-        const result = await tmdbClient.getMovieRecommendations(movieId, {
-          page,
-        });
+    const result = await tmdb.getMovieRecommendations(movieId, { page });
 
-        const formattedResults = result.results.map((movie) =>
-          formatTmdbMovieResult(movie, tmdbClient.getImageUrl, {
-            includeVoteCount: true,
-          })
-        );
+    const formattedResults = result.results.map((movie) =>
+      formatTmdbMovieResult(movie, tmdb.getImageUrl, { includeVoteCount: true })
+    );
 
-        return createPaginatedResponse(result, {
-          sourceMovie: {
-            tmdbId: movieId,
-            title: sourceMovieTitle,
-          },
-          recommendations: formattedResults,
-        });
-      } catch (error) {
-        return createErrorResponse("getting movie recommendations", error);
-      }
-    }
-  );
-};
+    return paginatedResult(result, {
+      sourceMovie: { tmdbId: movieId, title: sourceMovieTitle },
+      recommendations: formattedResults,
+    });
+  },
+});
